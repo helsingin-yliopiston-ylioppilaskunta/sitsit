@@ -1,8 +1,17 @@
-from sqlalchemy import Column, Integer, String
-from ..db.database import Base
+# from sqlalchemy import Column, Integer, String
+from typing import Optional
+from sqlmodel import SQLModel, Field
 
 
-class User(Base):
-    __tablename__ = "users"
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, index=True)
+class UserBase(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    name: str
+
+
+class User(UserBase):
+    id: int
+    name: str
+
+
+class PublicUser(UserBase):
+    name: str

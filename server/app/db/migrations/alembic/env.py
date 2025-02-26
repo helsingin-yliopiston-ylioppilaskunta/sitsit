@@ -31,10 +31,11 @@ if config.config_file_name is not None:
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
 )
-from app.db.database import Base
+# from app.db.database import Base
+from sqlmodel import SQLModel
 
 # target_metadata = mymodel.Base.metadata
-target_metadata = Base.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
