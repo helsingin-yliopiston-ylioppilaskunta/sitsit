@@ -131,6 +131,34 @@ class GroupResponse(BaseResponse):
     groups: list[PublicGroup]
 
 
+## ResourceTypes ##
+
+
+class BaseResourceType(SQLModel):
+    name: str = Field(default=None, index=True)
+
+
+class DBResourceType(BaseResourceType, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    active: bool = Field(default=True)
+
+
+class CreateResourceType(BaseResourceType):
+    pass
+
+
+class UpdateResourceType(BaseResourceType):
+    pass
+
+
+class PublicResourceType(BaseResourceType):
+    id: int
+
+
+class ResourceTypeResponse(BaseResponse):
+    resourceTypes: list[PublicResourceType]
+
+
 ## Resources ##
 
 
@@ -141,20 +169,26 @@ class BaseResource(SQLModel):
 class DBResource(BaseResource, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     group_id: Optional[int] = Field(default=None, foreign_key="dbgroup.id")
+    resource_type_id: Optional[int] = Field(
+        default=None, foreign_key="dbresourcetype.id"
+    )
     active: bool = Field(default=True)
 
 
 class CreateResource(BaseResource):
     group_id: int
+    resource_type_id: int
 
 
 class UpdateResource(BaseResource):
     group_id: int
+    resource_type_id: int
 
 
 class PublicResource(BaseResource):
     id: int
     group_id: int
+    resource_type_id: int
 
 
 class ResourceResponse(BaseResponse):
