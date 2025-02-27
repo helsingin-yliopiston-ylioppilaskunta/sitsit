@@ -37,7 +37,7 @@ class PublicOrg(BaseOrg):
 
 
 class OrgResponse(BaseResponse):
-    orgs: list[PublicOrg]
+    organizations: list[PublicOrg]
 
 
 ## Users ##
@@ -80,9 +80,9 @@ class BaseCollection(SQLModel):
     name: str = Field(default=None, index=True)
 
 
-class DBCollection(BaseCollection):
+class DBCollection(BaseCollection, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    active: bool = Field()
+    active: bool = Field(default=True)
 
 
 class CreateCollection(BaseCollection):
@@ -94,7 +94,7 @@ class UpdateCollection(BaseCollection):
 
 
 class PublicCollection(BaseCollection):
-    pass
+    id: int
 
 
 class CollectionResponse(BaseResponse):
@@ -108,14 +108,14 @@ class BaseGroup(SQLModel):
     name: str = Field(default=None, index=True)
 
 
-class DBGroup(BaseGroup):
+class DBGroup(BaseGroup, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     collection_id: Optional[int] = Field(default=None, foreign_key="dbcollection.id")
-    active: bool = Field()
+    active: bool = Field(default=True)
 
 
 class CreateGroup(BaseGroup):
-    pass
+    collection_id: int
 
 
 class UpdateGroup(BaseGroup):
@@ -128,7 +128,7 @@ class PublicGroup(BaseGroup):
 
 
 class GroupResponse(BaseResponse):
-    collections: list[PublicGroup]
+    groups: list[PublicGroup]
 
 
 ## Resources ##
@@ -138,14 +138,14 @@ class BaseResource(SQLModel):
     name: str = Field(default=None, index=True)
 
 
-class DBResource(BaseResource):
+class DBResource(BaseResource, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     group_id: Optional[int] = Field(default=None, foreign_key="dbgroup.id")
-    active: bool = Field()
+    active: bool = Field(default=True)
 
 
 class CreateResource(BaseResource):
-    pass
+    group_id: int
 
 
 class UpdateResource(BaseResource):
@@ -158,4 +158,4 @@ class PublicResource(BaseResource):
 
 
 class ResourceResponse(BaseResponse):
-    collections: list[PublicResource]
+    resources: list[PublicResource]
