@@ -22,6 +22,14 @@ class DBOrg(BaseOrg, table=True):
     active: bool = Field(default=True)
 
 
+class CreateOrg(BaseOrg):
+    pass
+
+
+class UpdateOrg(BaseOrg):
+    pass
+
+
 class PublicOrg(BaseOrg):
     id: int
     name: str
