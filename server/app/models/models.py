@@ -1,7 +1,7 @@
 # from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, SQLModel
 from pydantic import BaseModel
-
+from datetime import datetime
 from typing import Optional
 
 
@@ -193,3 +193,161 @@ class PublicResource(BaseResource):
 
 class ResourceResponse(BaseResponse):
     resources: list[PublicResource]
+
+
+## Reservations ##
+
+
+class BaseReservation(SQLModel):
+    name: str = Field(default=None)
+
+
+class DBReservation(BaseReservation, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="dbuser.id")
+    org_id: Optional[int] = Field(default=None, foreign_key="dborg.id")
+    description: Optional[str] = Field()
+    active: bool = Field(default=True)
+
+
+class CreateReservation(BaseReservation):
+    user_id: int
+    org_id: int
+    contact_info: Optional[str]
+    description: Optional[str]
+
+
+class UpdateReservation(BaseReservation):
+    user_id: int
+    org_id: int
+    contact_info: Optional[str]
+    description: Optional[str]
+
+
+class PublicReservation(BaseReservation):
+    id: int
+    user_id: int
+    org_id: int
+    contact_info: Optional[str]
+    description: Optional[str]
+
+
+class ReservationResponse(BaseResponse):
+    reservations: list[PublicReservation]
+
+
+## ReservationInfo ##
+
+
+class BaseReservationInfo(SQLModel):
+    reservation_id: int = Field(
+        default=None, index=True, foreign_key="dbreservation.id"
+    )
+
+
+class DBReservationInfo(BaseReservationInfo, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    reserver: Optional[str] = Field(index=True)
+    contact: Optional[str] = Field()
+    participants: Optional[int] = Field(default=0)
+    description: Optional[str] = Field()
+    notes: Optional[str] = Field()
+    active: bool = Field(default=True)
+
+
+class CreateReservationInfo(BaseReservationInfo):
+    reservation_id: int
+    reserver: Optional[str]
+    contact: Optional[str]
+    participants: Optional[str]
+    description: Optional[str]
+    notes: Optional[str]
+
+
+class UpdateReservationInfo(BaseReservationInfo):
+    reserver: Optional[str]
+    contact: Optional[str]
+    participants: Optional[str]
+    description: Optional[str]
+    notes: Optional[str]
+
+
+class PublicReservationInfo(BaseReservationInfo):
+    id: int
+
+
+class PrivateReservationInfo(BaseReservationInfo):
+    id: int
+    reserver: Optional[str]
+    contact: Optional[str]
+    participants: Optional[str]
+    description: Optional[str]
+    notes: Optional[str]
+
+
+class ReservationInfoResponse(BaseResponse):
+    reservations: list[PublicReservationInfo | PrivateReservationInfo]
+
+
+## ReservationTime ##
+
+
+class BaseReservationTime(SQLModel):
+    reservation_id: int = Field(
+        default=None, index=True, foreign_key="dbreservation.id"
+    )
+
+
+class DBReservationTime(BaseReservationTime):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    active: bool = Field(default=True)
+
+
+class CreateReservationTime(BaseReservationTime):
+    timestamp: datetime
+
+
+class ModifyReservationTime(BaseReservationTime):
+    timestamp: datetime
+
+
+class PublicReservationTime(BaseReservationTime):
+    id: int
+    timestamp: int
+
+
+class ReservationTimeResponse(BaseResponse):
+    times: list[PublicReservationTime]
+
+
+## ReservationPlace ##
+
+
+class BaseReservationResource(SQLModel):
+    reservation_id: int = Field(
+        default=None, index=True, foreign_key="dbreservation.id"
+    )
+
+
+class DBReservationResource(BaseReservationResource):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    resource_id: int = Field(default=None, index=True, foreign_key="dbresource.id")
+    active: bool = Field(default=True)
+
+
+class CreateReservationResource(BaseReservationResource):
+    resource_id: int
+
+
+class ModifyReservationResource(BaseReservationResource):
+    resource_id: int
+
+
+class PublicReservationResource(BaseReservationResource):
+    id: int
+    resource_id: int
+
+
+class ReservationResourceResponse(BaseResponse):
+    resources: list[PublicReservationResource]
