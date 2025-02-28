@@ -33,7 +33,7 @@ from app.models.models import (
     Response,
 )
 
-users_router = APIRouter(prefix="/users")
+users_router = APIRouter(prefix="/users", tags=["Users"])
 
 
 @users_router.get("/", response_model=Response[PublicUserWithOrg])
@@ -126,7 +126,7 @@ async def update_user(
 
 # Organizations
 
-orgs_router = APIRouter(prefix="/orgs")
+orgs_router = APIRouter(prefix="/orgs", tags=["Organizations"])
 
 
 @orgs_router.get("/", response_model=OrgResponse)
@@ -166,7 +166,7 @@ async def create_org(session: SessionDep, org: CreateOrg):
 
 # Collections
 
-collections_router = APIRouter(prefix="/collections")
+collections_router = APIRouter(prefix="/collections", tags=["Collections"])
 
 
 @collections_router.get("/", response_model=CollectionResponse)
@@ -208,7 +208,7 @@ async def create_collection(session: SessionDep, org: CreateCollection):
 
 ## Groups ##
 
-groups_router = APIRouter(prefix="/groups")
+groups_router = APIRouter(prefix="/groups", tags=["Groups"])
 
 
 @groups_router.get("/", response_model=GroupResponse)
@@ -246,7 +246,7 @@ async def create_group(session: SessionDep, group: CreateGroup):
 
 ## Resources ##
 
-resources_router = APIRouter(prefix="/resources")
+resources_router = APIRouter(prefix="/resources", tags=["Resources"])
 
 
 @resources_router.get("/", response_model=ResourceResponse)
