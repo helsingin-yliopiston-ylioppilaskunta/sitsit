@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 from app.db.session import SessionDep
 from app.models.models import (
     CreateUser,
+    UpdateUser,
     DBUser,
     PublicUser,
     PublicUserWithOrg,
@@ -96,6 +97,31 @@ async def delete_user(
     await session.refresh(db_user)
 
     return Response(status=True, more_available=False, items=[])
+
+@users_router.patch("/{user_id}", response_model=Response[PublicUserWithOrg])
+async def update_user(
+    session: SessionDep,
+    user_id: int,
+    user: UpdateUser
+) -> Response[PublicUserWithOrg]:
+    # db_user = await session.get(DBUser, user_id)
+    query = select(DBUser).where(DBUser.id == user_id).options(selectinload(DBUser.org))
+    result = await session.execute(query)
+    db_user: DBUser | None = result.scalar_one_or_none()
+
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user_data = user.model_dump(exclude_unset=True)
+    db_user.sqlmodel_update(user_data)
+
+    session.add(db_user)
+    await session.commit()
+    await session.refresh(db_user)
+
+    public_user = PublicUserWithOrg.from_orm(db_user)
+
+    return Response(status=True, more_available=False, items=[public_user])
 
 
 # Organizations
