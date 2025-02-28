@@ -56,7 +56,17 @@ async def read_users(
     response = Response(status=True, more_available=more_available, items=users)
 
     return response
-    # return users
+
+@users_router.get("/{user_id}", response_model=Response[PublicUserWithOrg])
+async def get_one_user(
+    session: SessionDep,
+    user_id: int
+) -> Response[PublicUserWithOrg]:
+    query = select(DBUser).where(DBUser.id == user_id).where(DBUser.active).options(selectinload(DBUser.org))
+    result = await session.execute(query)
+    user: PublicUserWithOrg = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[user])
+    return response
 
 
 @users_router.post("/", response_model=UserResponse)
