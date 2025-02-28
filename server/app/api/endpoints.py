@@ -11,24 +11,19 @@ from app.models.models import (
     DBUser,
     PublicUser,
     PublicUserWithOrg,
-    UserResponse,
     CreateOrg,
     DBOrg,
     PublicOrg,
     PublicOrgWithUsers,
-    OrgResponse,
     CreateCollection,
     DBCollection,
     PublicCollection,
-    CollectionResponse,
     CreateGroup,
     DBGroup,
     PublicGroup,
-    GroupResponse,
     CreateResource,
     DBResource,
     PublicResource,
-    ResourceResponse,
     Response,
 )
 
@@ -59,8 +54,10 @@ async def read_users(
     # return users
 
 
-@router.post("/users", response_model=UserResponse)
-async def create_user(session: SessionDep, user: CreateUser):
+@router.post("/users", response_model=Response[PublicUserWithOrg])
+async def create_user(
+    session: SessionDep, user: CreateUser
+) -> Response[PublicUserWithOrg]:
     db_user = DBUser(username=user.username, hash=user.hash, org_id=user.org_id)
     session.add(db_user)
     await session.commit()
@@ -72,19 +69,19 @@ async def create_user(session: SessionDep, user: CreateUser):
 
     print(public_user)
 
-    response = UserResponse(status=True, more_available=False, users=[public_user])
+    response = Response(status=True, more_available=False, items=[public_user])
     return response
 
 
 # Organizations
 
 
-@router.get("/orgs", response_model=OrgResponse)
+@router.get("/orgs", response_model=Response[PublicOrgWithUsers])
 async def read_orgs(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> OrgResponse:
+) -> Response[PublicOrgWithUsers]:
     query = select(DBOrg).where(DBOrg.active).options(selectinload(DBOrg.users))
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
@@ -92,15 +89,13 @@ async def read_orgs(
 
     more_available = len(orgs) > limit
 
-    response = OrgResponse(
-        status=True, more_available=more_available, organizations=orgs
-    )
+    response = Response(status=True, more_available=more_available, items=orgs)
 
     return response
 
 
-@router.post("/orgs", response_model=OrgResponse)
-async def create_org(session: SessionDep, org: CreateOrg):
+@router.post("/orgs", response_model=Response[PublicOrg])
+async def create_org(session: SessionDep, org: CreateOrg) -> Response[PublicOrg]:
     db_org = DBOrg(name=org.name)
     session.add(db_org)
     await session.commit()
@@ -108,38 +103,32 @@ async def create_org(session: SessionDep, org: CreateOrg):
 
     public_org = PublicOrg.from_orm(db_org)
 
-    response = OrgResponse(
-        status=True, more_available=False, organizations=[public_org]
-    )
+    response = Response(status=True, more_available=False, items=[public_org])
     return response
 
 
 # Collections
 
 
-@router.get("/collections", response_model=CollectionResponse)
+@router.get("/collections", response_model=Response[PublicCollection])
 async def read_collections(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> CollectionResponse:
+) -> Response[PublicCollection]:
     query = select(DBCollection).where(DBCollection.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     collections: list[PublicCollection] = result.scalars().all()
 
-    print(collections)
-
     more_available = len(collections) > limit
 
-    response = CollectionResponse(
-        status=True, more_available=more_available, collections=collections
-    )
+    response = Response(status=True, more_available=more_available, items=collections)
 
     return response
 
 
-@router.post("/collections", response_model=CollectionResponse)
+@router.post("/collections", response_model=Response[PublicCollection])
 async def create_collection(session: SessionDep, org: CreateCollection):
     db_collection = DBCollection(name=org.name)
     session.add(db_collection)
@@ -148,36 +137,31 @@ async def create_collection(session: SessionDep, org: CreateCollection):
 
     public_collection = PublicCollection.from_orm(db_collection)
 
-    response = CollectionResponse(
-        status=True, more_available=False, collections=[public_collection]
-    )
+    response = Response(status=True, more_available=False, items=[public_collection])
     return response
 
 
 ## Groups ##
 
 
-@router.get("/groups", response_model=GroupResponse)
+@router.get("/groups", response_model=Response[PublicGroup])
 async def read_groups(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> GroupResponse:
+) -> Response[PublicGroup]:
     query = select(DBGroup).where(DBGroup.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     groups: list[PublicGroup] = result.scalars().all()
 
-    print(groups)
-
     more_available = len(groups) > limit
-
-    response = GroupResponse(status=True, more_available=more_available, groups=groups)
+    response = Response(status=True, more_available=more_available, items=groups)
 
     return response
 
 
-@router.post("/groups", response_model=GroupResponse)
+@router.post("/groups", response_model=Response[PublicGroup])
 async def create_group(session: SessionDep, group: CreateGroup):
     db_group = DBGroup(name=group.name, collection_id=group.collection_id)
     session.add(db_group)
@@ -186,36 +170,32 @@ async def create_group(session: SessionDep, group: CreateGroup):
 
     public_group = PublicGroup.from_orm(db_group)
 
-    response = GroupResponse(status=True, more_available=False, groups=[public_group])
+    response = Response(status=True, more_available=False, items=[public_group])
     return response
 
 
 ## Resources ##
 
 
-@router.get("/resources", response_model=ResourceResponse)
+@router.get("/resources", response_model=Response[PublicGroup])
 async def read_resources(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> ResourceResponse:
+) -> Response[PublicGroup]:
     query = select(DBResource).where(DBResource.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     resources: list[PublicResource] = result.scalars().all()
 
-    print(resources)
-
     more_available = len(resources) > limit
 
-    response = ResourceResponse(
-        status=True, more_available=more_available, resources=resources
-    )
+    response = Response(status=True, more_available=more_available, items=resources)
 
     return response
 
 
-@router.post("/resources", response_model=ResourceResponse)
+@router.post("/resources", response_model=Response[PublicResource])
 async def create_resource(session: SessionDep, org: CreateResource):
     db_resource = DBResource(name=org.name, group_id=org.group_id)
     session.add(db_resource)
@@ -224,7 +204,5 @@ async def create_resource(session: SessionDep, org: CreateResource):
 
     public_resource = PublicResource.from_orm(db_resource)
 
-    response = ResourceResponse(
-        status=True, more_available=False, resources=[public_resource]
-    )
+    response = Response(status=True, more_available=False, items=[public_resource])
     return response

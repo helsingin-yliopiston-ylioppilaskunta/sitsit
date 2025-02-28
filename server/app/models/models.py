@@ -11,11 +11,6 @@ class Response[T](BaseModel):
     items: list[T]
 
 
-class BaseResponse(BaseModel):
-    status: bool
-    more_available: bool
-
-
 ## Organizations ##
 
 
@@ -46,10 +41,6 @@ class PublicOrgWithUsers(BaseOrg):
     id: int
     name: str
     users: list["DBUser"]
-
-
-class OrgResponse(BaseResponse):
-    organizations: list[PublicOrg | PublicOrgWithUsers]
 
 
 ## Users ##
@@ -89,10 +80,6 @@ class PublicUserWithOrg(BaseUser):
     org: DBOrg | None
 
 
-class UserResponse(BaseResponse):
-    users: list[PublicUser | PublicUserWithOrg]
-
-
 ## Collections ##
 
 
@@ -115,10 +102,6 @@ class UpdateCollection(BaseCollection):
 
 class PublicCollection(BaseCollection):
     id: int
-
-
-class CollectionResponse(BaseResponse):
-    collections: list[PublicCollection]
 
 
 ## Groups ##
@@ -147,10 +130,6 @@ class PublicGroup(BaseGroup):
     collection_id: int
 
 
-class GroupResponse(BaseResponse):
-    groups: list[PublicGroup]
-
-
 ## ResourceTypes ##
 
 
@@ -173,10 +152,6 @@ class UpdateResourceType(BaseResourceType):
 
 class PublicResourceType(BaseResourceType):
     id: int
-
-
-class ResourceTypeResponse(BaseResponse):
-    resourceTypes: list[PublicResourceType]
 
 
 ## Resources ##
@@ -209,10 +184,6 @@ class PublicResource(BaseResource):
     id: int
     group_id: int
     resource_type_id: int
-
-
-class ResourceResponse(BaseResponse):
-    resources: list[PublicResource]
 
 
 ## Reservations ##
@@ -250,10 +221,6 @@ class PublicReservation(BaseReservation):
     org_id: int
     contact_info: Optional[str]
     description: Optional[str]
-
-
-class ReservationResponse(BaseResponse):
-    reservations: list[PublicReservation]
 
 
 ## ReservationInfo ##
@@ -305,10 +272,6 @@ class PrivateReservationInfo(BaseReservationInfo):
     notes: Optional[str]
 
 
-class ReservationInfoResponse(BaseResponse):
-    reservations: list[PublicReservationInfo | PrivateReservationInfo]
-
-
 ## ReservationTime ##
 
 
@@ -337,10 +300,6 @@ class PublicReservationTime(BaseReservationTime):
     timestamp: int
 
 
-class ReservationTimeResponse(BaseResponse):
-    times: list[PublicReservationTime]
-
-
 ## ReservationPlace ##
 
 
@@ -367,7 +326,3 @@ class ModifyReservationResource(BaseReservationResource):
 class PublicReservationResource(BaseReservationResource):
     id: int
     resource_id: int
-
-
-class ReservationResourceResponse(BaseResponse):
-    resources: list[PublicReservationResource]
