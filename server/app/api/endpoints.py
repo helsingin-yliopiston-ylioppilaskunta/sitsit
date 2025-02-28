@@ -76,14 +76,26 @@ async def create_user(session: SessionDep, user: CreateUser):
     await session.commit()
     await session.refresh(db_user)
 
-    print(db_user)
-
     public_user = PublicUser.from_orm(db_user)
-
-    print(public_user)
 
     response = UserResponse(status=True, more_available=False, users=[public_user])
     return response
+
+@users_router.delete("/{user_id}", response_model=Response[None])
+async def delete_user(
+    session: SessionDep,
+    user_id: int
+) -> Response[None]:
+    db_user = await session.get(DBUser, user_id)
+    if not db_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    db_user.sqlmodel_update({"active": False})
+    session.add(db_user)
+    await session.commit()
+    await session.refresh(db_user)
+
+    return Response(status=True, more_available=False, items=[])
 
 
 # Organizations
