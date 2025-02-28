@@ -17,6 +17,7 @@ from app.models.models import (
     DBOrg,
     PublicOrg,
     PublicOrgWithUsers,
+    UpdateOrg,
     OrgResponse,
     CreateCollection,
     DBCollection,
@@ -124,7 +125,8 @@ async def update_user(
     return Response(status=True, more_available=False, items=[public_user])
 
 
-# Organizations
+## Organizations ##
+
 
 orgs_router = APIRouter(prefix="/orgs", tags=["Organizations"])
 
@@ -149,6 +151,19 @@ async def read_orgs(
     return response
 
 
+@orgs_router.get("/{org_id}", response_model=Response[PublicOrgWithUsers])
+async def get_one_org(
+    session: SessionDep,
+    org_id: int
+) -> Response[PublicOrgWithUsers]:
+    query = select(DBOrg).where(DBOrg.id == org_id).where(DBOrg.active).options(selectinload(DBOrg.users))
+    result = await session.execute(query)
+    org: PublicOrgWithUsers = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[org])
+    return response
+
+
+
 @orgs_router.post("/", response_model=OrgResponse)
 async def create_org(session: SessionDep, org: CreateOrg):
     db_org = DBOrg(name=org.name)
@@ -162,6 +177,49 @@ async def create_org(session: SessionDep, org: CreateOrg):
         status=True, more_available=False, organizations=[public_org]
     )
     return response
+
+
+@orgs_router.delete("/{org_id}", response_model=Response[None])
+async def delete_org(
+    session: SessionDep,
+    org_id: int
+) -> Response[None]:
+    db_org = await session.get(DBOrg, org_id)
+    if not db_org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    db_org.sqlmodel_update({"active": False})
+    session.add(db_org)
+    await session.commit()
+    await session.refresh(db_org)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@orgs_router.patch("/{org_id}", response_model=Response[PublicOrgWithUsers])
+async def update_org(
+    session: SessionDep,
+    org_id: int,
+    org: UpdateOrg
+) -> Response[PublicOrgWithUsers]:
+    query = select(DBOrg).where(DBOrg.id == org_id).options(selectinload(DBOrg.users))
+    result = await session.execute(query)
+    db_org: DBOrg | None = result.scalar_one_or_none()
+
+    if not db_org:
+        raise HTTPException(status_code=404, detail="Org not found")
+
+    org_data = org.model_dump(exclude_unset=True)
+    db_org.sqlmodel_update(org_data)
+
+    session.add(db_org)
+    await session.commit()
+    await session.refresh(db_org)
+
+    public_org = PublicOrgWithUsers.from_orm(db_org)
+
+    return Response(status=True, more_available=False, items=[public_org])
+
 
 
 # Collections

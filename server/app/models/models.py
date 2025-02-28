@@ -43,9 +43,8 @@ class PublicOrg(BaseOrg):
 
 
 class PublicOrgWithUsers(BaseOrg):
-    id: int
     name: str
-    users: list["DBUser"]
+    users: list["PublicUser"]
 
 
 class OrgResponse(BaseResponse):
