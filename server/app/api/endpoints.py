@@ -3,15 +3,19 @@ from typing import Annotated, Optional
 from fastapi import APIRouter, Query
 from sqlmodel import select
 
+from sqlalchemy.orm import selectinload
+
 from app.db.session import SessionDep
 from app.models.models import (
     CreateUser,
     DBUser,
     PublicUser,
+    PublicUserWithOrg,
     UserResponse,
     CreateOrg,
     DBOrg,
     PublicOrg,
+    PublicOrgWithUsers,
     OrgResponse,
     CreateCollection,
     DBCollection,
@@ -25,37 +29,39 @@ from app.models.models import (
     DBResource,
     PublicResource,
     ResourceResponse,
+    Response,
 )
 
 router = APIRouter()
 
 
-@router.get("/users", response_model=UserResponse)
+@router.get("/users", response_model=Response[PublicUserWithOrg])
 async def read_users(
     session: SessionDep,
     org: Optional[int] = None,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> UserResponse:
-    query = select(DBUser).where(DBUser.active)
+) -> Response[PublicUserWithOrg]:
+    query = select(DBUser).where(DBUser.active).options(selectinload(DBUser.org))
 
     if org:
         query = query.where(DBUser.org_id == org)
 
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
-    users: list[PublicUser] = result.scalars().all()
+    users: list[PublicUserWithOrg] = result.scalars().all()
 
     more_available = len(users) > limit
 
-    response = UserResponse(status=True, more_available=more_available, users=users)
+    response = Response(status=True, more_available=more_available, items=users)
 
     return response
+    # return users
 
 
 @router.post("/users", response_model=UserResponse)
 async def create_user(session: SessionDep, user: CreateUser):
-    db_user = DBUser(username=user.username, hash=user.hash)
+    db_user = DBUser(username=user.username, hash=user.hash, org_id=user.org_id)
     session.add(db_user)
     await session.commit()
     await session.refresh(db_user)
@@ -79,12 +85,10 @@ async def read_orgs(
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
 ) -> OrgResponse:
-    query = select(DBOrg).where(DBOrg.active)
+    query = select(DBOrg).where(DBOrg.active).options(selectinload(DBOrg.users))
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
-    orgs: list[PublicOrg] = result.scalars().all()
-
-    print(orgs)
+    orgs: list[PublicOrgWithUsers] = result.scalars().all()
 
     more_available = len(orgs) > limit
 

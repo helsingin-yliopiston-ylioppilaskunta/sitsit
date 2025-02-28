@@ -1,8 +1,14 @@
 # from sqlalchemy import Column, Integer, String
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, SQLModel, Relationship
 from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
+
+
+class Response[T](BaseModel):
+    status: bool
+    more_available: bool
+    items: list[T]
 
 
 class BaseResponse(BaseModel):
@@ -20,6 +26,7 @@ class BaseOrg(SQLModel):
 class DBOrg(BaseOrg, table=True):
     id: int = Field(default=None, primary_key=True)
     active: bool = Field(default=True)
+    users: list["DBUser"] = Relationship(back_populates="org")
 
 
 class CreateOrg(BaseOrg):
@@ -33,11 +40,16 @@ class UpdateOrg(BaseOrg):
 class PublicOrg(BaseOrg):
     id: int
     name: str
-    active: bool
+
+
+class PublicOrgWithUsers(BaseOrg):
+    id: int
+    name: str
+    users: list["DBUser"]
 
 
 class OrgResponse(BaseResponse):
-    organizations: list[PublicOrg]
+    organizations: list[PublicOrg | PublicOrgWithUsers]
 
 
 ## Users ##
@@ -52,10 +64,12 @@ class DBUser(BaseUser, table=True):
     hash: str = Field(default=None)
     active: bool = Field(default=True)
     org_id: Optional[int] = Field(default=None, foreign_key="dborg.id")
+    org: DBOrg = Relationship(back_populates="users")
 
 
 class CreateUser(BaseUser):
     hash: str
+    org_id: int
 
 
 class UpdateUser(BaseUser):
@@ -67,10 +81,16 @@ class UpdateUser(BaseUser):
 class PublicUser(BaseUser):
     id: int
     active: bool
+    org_id: Optional[int]
+
+
+class PublicUserWithOrg(BaseUser):
+    id: int
+    org: DBOrg | None
 
 
 class UserResponse(BaseResponse):
-    users: list[PublicUser]
+    users: list[PublicUser | PublicUserWithOrg]
 
 
 ## Collections ##
