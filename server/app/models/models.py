@@ -73,20 +73,18 @@ class CreateUser(BaseUser):
 
 
 class UpdateUser(BaseUser):
-    id: int
     hash: str
-    organization_id: int | None
+    org_id: int | None
 
 
 class PublicUser(BaseUser):
     id: int
-    active: bool
     org_id: Optional[int]
 
 
 class PublicUserWithOrg(BaseUser):
     id: int
-    org: DBOrg | None
+    org: PublicOrg | None
 
 
 class UserResponse(BaseResponse):
