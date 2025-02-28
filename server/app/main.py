@@ -1,11 +1,11 @@
 from fastapi import FastAPI
 
 from app.db.database import engine
-from app.api.users import router as users_router
-from app.api.orgs import router as orgs_router
-from app.api.collections import router as collections_router
-from app.api.groups import router as groups_router
-from app.api.resources import router as resources_router
+from app.api.endpoints import users_router
+from app.api.endpoints import orgs_router
+from app.api.endpoints import collections_router
+from app.api.endpoints import groups_router
+from app.api.endpoints import resources_router
 
 from sqlmodel import SQLModel
 

@@ -32,10 +32,10 @@ from app.models.models import (
     Response,
 )
 
-router = APIRouter()
+users_router = APIRouter(prefix="/users")
 
 
-@router.get("/users", response_model=Response[PublicUserWithOrg])
+@users_router.get("/", response_model=Response[PublicUserWithOrg])
 async def read_users(
     session: SessionDep,
     org: Optional[int] = None,
@@ -59,7 +59,7 @@ async def read_users(
     # return users
 
 
-@router.post("/users", response_model=UserResponse)
+@users_router.post("/", response_model=UserResponse)
 async def create_user(session: SessionDep, user: CreateUser):
     db_user = DBUser(username=user.username, hash=user.hash, org_id=user.org_id)
     session.add(db_user)
@@ -78,8 +78,10 @@ async def create_user(session: SessionDep, user: CreateUser):
 
 # Organizations
 
+orgs_router = APIRouter(prefix="/orgs")
 
-@router.get("/orgs", response_model=OrgResponse)
+
+@orgs_router.get("/", response_model=OrgResponse)
 async def read_orgs(
     session: SessionDep,
     offset: int = 0,
@@ -99,7 +101,7 @@ async def read_orgs(
     return response
 
 
-@router.post("/orgs", response_model=OrgResponse)
+@orgs_router.post("/", response_model=OrgResponse)
 async def create_org(session: SessionDep, org: CreateOrg):
     db_org = DBOrg(name=org.name)
     session.add(db_org)
@@ -116,8 +118,10 @@ async def create_org(session: SessionDep, org: CreateOrg):
 
 # Collections
 
+collections_router = APIRouter(prefix="/collections")
 
-@router.get("/collections", response_model=CollectionResponse)
+
+@collections_router.get("/", response_model=CollectionResponse)
 async def read_collections(
     session: SessionDep,
     offset: int = 0,
@@ -139,7 +143,7 @@ async def read_collections(
     return response
 
 
-@router.post("/collections", response_model=CollectionResponse)
+@collections_router.post("/", response_model=CollectionResponse)
 async def create_collection(session: SessionDep, org: CreateCollection):
     db_collection = DBCollection(name=org.name)
     session.add(db_collection)
@@ -156,8 +160,10 @@ async def create_collection(session: SessionDep, org: CreateCollection):
 
 ## Groups ##
 
+groups_router = APIRouter(prefix="/groups")
 
-@router.get("/groups", response_model=GroupResponse)
+
+@groups_router.get("/", response_model=GroupResponse)
 async def read_groups(
     session: SessionDep,
     offset: int = 0,
@@ -177,7 +183,7 @@ async def read_groups(
     return response
 
 
-@router.post("/groups", response_model=GroupResponse)
+@groups_router.post("/", response_model=GroupResponse)
 async def create_group(session: SessionDep, group: CreateGroup):
     db_group = DBGroup(name=group.name, collection_id=group.collection_id)
     session.add(db_group)
@@ -192,8 +198,10 @@ async def create_group(session: SessionDep, group: CreateGroup):
 
 ## Resources ##
 
+resources_router = APIRouter(prefix="/resources")
 
-@router.get("/resources", response_model=ResourceResponse)
+
+@resources_router.get("/", response_model=ResourceResponse)
 async def read_resources(
     session: SessionDep,
     offset: int = 0,
@@ -215,7 +223,7 @@ async def read_resources(
     return response
 
 
-@router.post("/resources", response_model=ResourceResponse)
+@resources_router.post("/", response_model=ResourceResponse)
 async def create_resource(session: SessionDep, org: CreateResource):
     db_resource = DBResource(name=org.name, group_id=org.group_id)
     session.add(db_resource)
