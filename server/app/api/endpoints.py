@@ -32,6 +32,7 @@ from app.models.models import (
     CreateResource,
     DBResource,
     PublicResource,
+    UpdateResource,
     ResourceResponse,
     Response,
 )
@@ -414,8 +415,8 @@ async def update_group(
     return Response(status=True, more_available=False, items=[public_group])
 
 
-
 ## Resources ##
+
 
 resources_router = APIRouter(prefix="/resources", tags=["Resources"])
 
@@ -442,9 +443,21 @@ async def read_resources(
     return response
 
 
+@resources_router.get("/{resource_id}", response_model=Response[PublicResource])
+async def get_one_resource(
+    session: SessionDep,
+    resource_id: int
+) -> Response[PublicResource]:
+    query = select(DBResource).where(DBResource.id == resource_id).where(DBResource.active)
+    result = await session.execute(query)
+    resource: PublicResource = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[resource])
+    return response
+
+
 @resources_router.post("/", response_model=ResourceResponse)
 async def create_resource(session: SessionDep, org: CreateResource):
-    db_resource = DBResource(name=org.name, group_id=org.group_id)
+    db_resource = DBResource(name=org.name, group_id=org.group_id, resource_type_id=org.resource_type_id)
     session.add(db_resource)
     await session.commit()
     await session.refresh(db_resource)
@@ -455,3 +468,47 @@ async def create_resource(session: SessionDep, org: CreateResource):
         status=True, more_available=False, resources=[public_resource]
     )
     return response
+
+@resources_router.delete("/{resource_id}", response_model=Response[None])
+async def delete_resource(
+    session: SessionDep,
+    resource_id: int
+) -> Response[None]:
+    db_resource = await session.get(DBResource, resource_id)
+    if not db_resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    db_resource.sqlmodel_update({"active": False})
+    session.add(db_resource)
+    await session.commit()
+    await session.refresh(db_resource)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@resources_router.patch("/{resource_id}", response_model=Response[PublicResource])
+async def update_resource(
+    session: SessionDep,
+    resource_id: int,
+    resource: UpdateResource
+) -> Response[PublicResource]:
+    query = select(DBResource).where(DBResource.id == resource_id)
+    result = await session.execute(query)
+    db_resource: DBResource | None = result.scalar_one_or_none()
+
+    if not db_resource:
+        raise HTTPException(status_code=404, detail="Resource not found")
+
+    resource_data = resource.model_dump(exclude_unset=True)
+    db_resource.sqlmodel_update(resource_data)
+
+    session.add(db_resource)
+    await session.commit()
+    await session.refresh(db_resource)
+
+    public_resource = PublicResource.from_orm(db_resource)
+
+    return Response(status=True, more_available=False, items=[public_resource])
+
+
+
