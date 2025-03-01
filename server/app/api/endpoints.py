@@ -33,7 +33,10 @@ from app.models.models import (
     DBResource,
     PublicResource,
     UpdateResource,
-    ResourceResponse,
+    CreateResourceType,
+    DBResourceType,
+    PublicResourceType,
+    UpdateResourceType,
     Response,
 )
 
@@ -421,12 +424,12 @@ async def update_group(
 resources_router = APIRouter(prefix="/resources", tags=["Resources"])
 
 
-@resources_router.get("/", response_model=ResourceResponse)
+@resources_router.get("/", response_model=Response[PublicResource])
 async def read_resources(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> ResourceResponse:
+) -> Response[PublicResource]:
     query = select(DBResource).where(DBResource.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
@@ -436,7 +439,7 @@ async def read_resources(
 
     more_available = len(resources) > limit
 
-    response = ResourceResponse(
+    response = Response[PublicResource](
         status=True, more_available=more_available, resources=resources
     )
 
@@ -455,7 +458,7 @@ async def get_one_resource(
     return response
 
 
-@resources_router.post("/", response_model=ResourceResponse)
+@resources_router.post("/", response_model=Response[PublicResource])
 async def create_resource(session: SessionDep, org: CreateResource):
     db_resource = DBResource(name=org.name, group_id=org.group_id, resource_type_id=org.resource_type_id)
     session.add(db_resource)
@@ -464,7 +467,7 @@ async def create_resource(session: SessionDep, org: CreateResource):
 
     public_resource = PublicResource.from_orm(db_resource)
 
-    response = ResourceResponse(
+    response = Response[PublicResource](
         status=True, more_available=False, resources=[public_resource]
     )
     return response
@@ -509,6 +512,101 @@ async def update_resource(
     public_resource = PublicResource.from_orm(db_resource)
 
     return Response(status=True, more_available=False, items=[public_resource])
+
+
+
+## ResourceTypes ##
+
+
+resourcetypes_router = APIRouter(prefix="/resourcetypes", tags=["ResourceTypes"])
+
+
+@resourcetypes_router.get("/", response_model=Response[PublicResourceType])
+async def read_resourceTypes(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> Response[PublicResourceType]:
+    query = select(DBResourceType).where(DBResourceType.active)
+    query = query.offset(offset).limit(limit + 1)
+    result = await session.execute(query)
+    resourceTypes: list[PublicResourceType] = result.scalars().all()
+
+    more_available = len(resourceTypes) > limit
+
+    response = Response(
+        status=True, more_available=more_available, items=resourceTypes
+    )
+
+    return response
+
+
+@resourcetypes_router.get("/{resourceType_id}", response_model=Response[PublicResourceType])
+async def get_one_resourceType(
+    session: SessionDep,
+    resourceType_id: int
+) -> Response[PublicResourceType]:
+    query = select(DBResourceType).where(DBResourceType.id == resourceType_id).where(DBResourceType.active)
+    result = await session.execute(query)
+    resourceType: PublicResourceType = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[resourceType])
+    return response
+
+
+@resourcetypes_router.post("/", response_model=Response[PublicResourceType])
+async def create_resourceType(session: SessionDep, resourcetype: CreateResourceType):
+    db_resourceType = DBResourceType(name=resourcetype.name)
+    session.add(db_resourceType)
+    await session.commit()
+    await session.refresh(db_resourceType)
+
+    public_resourceType = PublicResourceType.from_orm(db_resourceType)
+
+    response = Response(
+        status=True, more_available=False, items=[public_resourceType]
+    )
+    return response
+
+@resourcetypes_router.delete("/{resourceType_id}", response_model=Response[None])
+async def delete_resourceType(
+    session: SessionDep,
+    resourceType_id: int
+) -> Response[None]:
+    db_resourceType = await session.get(DBResourceType, resourceType_id)
+    if not db_resourceType:
+        raise HTTPException(status_code=404, detail="ResourceType not found")
+
+    db_resourceType.sqlmodel_update({"active": False})
+    session.add(db_resourceType)
+    await session.commit()
+    await session.refresh(db_resourceType)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@resourcetypes_router.patch("/{resourceType_id}", response_model=Response[PublicResourceType])
+async def update_resourceType(
+    session: SessionDep,
+    resourceType_id: int,
+    resourceType: UpdateResourceType
+) -> Response[PublicResourceType]:
+    query = select(DBResourceType).where(DBResourceType.id == resourceType_id)
+    result = await session.execute(query)
+    db_resourceType: DBResourceType | None = result.scalar_one_or_none()
+
+    if not db_resourceType:
+        raise HTTPException(status_code=404, detail="ResourceType not found")
+
+    resourceType_data = resourceType.model_dump(exclude_unset=True)
+    db_resourceType.sqlmodel_update(resourceType_data)
+
+    session.add(db_resourceType)
+    await session.commit()
+    await session.refresh(db_resourceType)
+
+    public_resourceType = PublicResourceType.from_orm(db_resourceType)
+
+    return Response(status=True, more_available=False, items=[public_resourceType])
 
 
 

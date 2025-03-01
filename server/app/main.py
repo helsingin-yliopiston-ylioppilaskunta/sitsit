@@ -6,6 +6,7 @@ from app.api.endpoints import orgs_router
 from app.api.endpoints import collections_router
 from app.api.endpoints import groups_router
 from app.api.endpoints import resources_router
+from app.api.endpoints import resourcetypes_router
 
 from sqlmodel import SQLModel
 
@@ -33,6 +34,10 @@ tags_metadata = [
     {
         "name": "Resources",
         "description": "Operations related to management of resources"
+    },
+    {
+        "name": "ResourceTypes",
+        "description": "Operations related to management of resource types"
     }
 ]
 
@@ -61,3 +66,4 @@ app.include_router(orgs_router)
 app.include_router(collections_router)
 app.include_router(groups_router)
 app.include_router(resources_router)
+app.include_router(resourcetypes_router)
