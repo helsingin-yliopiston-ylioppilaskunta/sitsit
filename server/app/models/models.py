@@ -1,7 +1,8 @@
 # from sqlalchemy import Column, Integer, String
 from sqlmodel import Field, SQLModel, Relationship
+from sqlalchemy import Column, DateTime, func
 from pydantic import BaseModel
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 
@@ -312,9 +313,12 @@ class BaseReservationTime(SQLModel):
     )
 
 
-class DBReservationTime(BaseReservationTime):
+class DBReservationTime(BaseReservationTime, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
     active: bool = Field(default=True)
 
 
@@ -322,13 +326,13 @@ class CreateReservationTime(BaseReservationTime):
     timestamp: datetime
 
 
-class ModifyReservationTime(BaseReservationTime):
+class UpdateReservationTime(BaseReservationTime):
     timestamp: datetime
 
 
 class PublicReservationTime(BaseReservationTime):
     id: int
-    timestamp: int
+    timestamp: datetime
 
 
 class ReservationTimeResponse(BaseResponse):
@@ -354,7 +358,7 @@ class CreateReservationResource(BaseReservationResource):
     resource_id: int
 
 
-class ModifyReservationResource(BaseReservationResource):
+class UpdateReservationResource(BaseReservationResource):
     resource_id: int
 
 

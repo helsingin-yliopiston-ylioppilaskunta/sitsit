@@ -58,6 +58,13 @@ from app.models.models import (
 )
 
 from app.models.models import (
+    CreateReservationTime,
+    DBReservationTime,
+    PublicReservationTime,
+    UpdateReservationTime,
+)
+
+from app.models.models import (
     Response,
 )
 
@@ -715,3 +722,109 @@ async def update_reservation(
     public_reservation = PublicReservation.from_orm(db_reservation)
 
     return Response(status=True, more_available=False, items=[public_reservation])
+
+
+## ReservationTimes ##
+
+
+reservationtimes_router = APIRouter(
+    prefix="/reservationTimes", tags=["ReservationTimes"]
+)
+
+
+@reservationtimes_router.get("/", response_model=Response[PublicReservationTime])
+async def read_reservationTimes(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> Response[PublicReservationTime]:
+    query = select(DBReservationTime).where(DBReservationTime.active)
+    query = query.offset(offset).limit(limit + 1)
+    result = await session.execute(query)
+    reservationTimes: list[PublicReservationTime] = result.scalars().all()
+
+    more_available = len(reservationTimes) > limit
+
+    response = Response(
+        status=True, more_available=more_available, items=reservationTimes
+    )
+
+    return response
+
+
+@reservationtimes_router.get(
+    "/{reservationTime_id}", response_model=Response[PublicReservationTime]
+)
+async def get_one_reservationTime(
+    session: SessionDep, reservationTime_id: int
+) -> Response[PublicReservationTime]:
+    query = (
+        select(DBReservationTime)
+        .where(DBReservationTime.id == reservationTime_id)
+        .where(DBReservationTime.active)
+    )
+    result = await session.execute(query)
+    reservationTime: PublicReservationTime = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[reservationTime])
+    return response
+
+
+@reservationtimes_router.post("/", response_model=Response[PublicReservationTime])
+async def create_reservationTime(
+    session: SessionDep, reservationTime: CreateReservationTime
+):
+    db_reservationTime = DBReservationTime(
+        reservation_id=reservationTime.reservation_id,
+        timestamp=reservationTime.timestamp,
+    )
+    session.add(db_reservationTime)
+    await session.commit()
+    await session.refresh(db_reservationTime)
+
+    public_reservationTime = PublicReservationTime.from_orm(db_reservationTime)
+
+    response = Response(
+        status=True, more_available=False, items=[public_reservationTime]
+    )
+    return response
+
+
+@reservationtimes_router.delete("/{reservationTime_id}", response_model=Response[None])
+async def delete_reservationTime(
+    session: SessionDep, reservationTime_id: int
+) -> Response[None]:
+    db_reservationTime = await session.get(DBReservationTime, reservationTime_id)
+    if not db_reservationTime:
+        raise HTTPException(status_code=404, detail="ReservationTime not found")
+
+    db_reservationTime.sqlmodel_update({"active": False})
+    session.add(db_reservationTime)
+    await session.commit()
+    await session.refresh(db_reservationTime)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@reservationtimes_router.patch(
+    "/{reservationTime_id}", response_model=Response[PublicReservationTime]
+)
+async def update_reservationTime(
+    session: SessionDep, reservationTime_id: int, reservationTime: UpdateReservationTime
+) -> Response[PublicReservationTime]:
+    query = select(DBReservationTime).where(DBReservationTime.id == reservationTime_id)
+    result = await session.execute(query)
+    db_reservationTime: DBReservationTime | None = result.scalar_one_or_none()
+
+    if not db_reservationTime:
+        raise HTTPException(status_code=404, detail="ReservationTime not found")
+
+    reservationTime_data = reservationTime.model_dump(exclude_unset=True)
+    db_reservationTime.sqlmodel_update(reservationTime_data)
+
+    session.add(db_reservationTime)
+    await session.commit()
+    await session.refresh(db_reservationTime)
+
+    public_reservationTime = PublicReservationTime.from_orm(db_reservationTime)
+
+    return Response(status=True, more_available=False, items=[public_reservationTime])

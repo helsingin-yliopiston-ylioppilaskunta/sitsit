@@ -8,6 +8,7 @@ from app.api.endpoints import groups_router
 from app.api.endpoints import resources_router
 from app.api.endpoints import resourcetypes_router
 from app.api.endpoints import reservations_router
+from app.api.endpoints import reservationtimes_router
 
 from sqlmodel import SQLModel
 
@@ -58,3 +59,4 @@ app.include_router(groups_router)
 app.include_router(resources_router)
 app.include_router(resourcetypes_router)
 app.include_router(reservations_router)
+app.include_router(reservationtimes_router)
