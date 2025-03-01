@@ -65,6 +65,13 @@ from app.models.models import (
 )
 
 from app.models.models import (
+    CreateReservationResource,
+    DBReservationResource,
+    PublicReservationResource,
+    UpdateReservationResource,
+)
+
+from app.models.models import (
     Response,
 )
 
@@ -828,3 +835,127 @@ async def update_reservationTime(
     public_reservationTime = PublicReservationTime.from_orm(db_reservationTime)
 
     return Response(status=True, more_available=False, items=[public_reservationTime])
+
+
+## ReservationResources ##
+
+
+reservationresources_router = APIRouter(
+    prefix="/reservationResources", tags=["ReservationResources"]
+)
+
+
+@reservationresources_router.get(
+    "/", response_model=Response[PublicReservationResource]
+)
+async def read_reservationResources(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> Response[PublicReservationResource]:
+    query = select(DBReservationResource).where(DBReservationResource.active)
+    query = query.offset(offset).limit(limit + 1)
+    result = await session.execute(query)
+    reservationResources: list[PublicReservationResource] = result.scalars().all()
+
+    more_available = len(reservationResources) > limit
+
+    response = Response(
+        status=True, more_available=more_available, items=reservationResources
+    )
+
+    return response
+
+
+@reservationresources_router.get(
+    "/{reservationResource_id}", response_model=Response[PublicReservationResource]
+)
+async def get_one_reservationResource(
+    session: SessionDep, reservationResource_id: int
+) -> Response[PublicReservationResource]:
+    query = (
+        select(DBReservationResource)
+        .where(DBReservationResource.id == reservationResource_id)
+        .where(DBReservationResource.active)
+    )
+    result = await session.execute(query)
+    reservationResource: PublicReservationResource = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[reservationResource])
+    return response
+
+
+@reservationresources_router.post(
+    "/", response_model=Response[PublicReservationResource]
+)
+async def create_reservationResource(
+    session: SessionDep, reservationResource: CreateReservationResource
+):
+    db_reservationResource = DBReservationResource(
+        reservation_id=reservationResource.reservation_id,
+        resource_id=reservationResource.resource_id,
+    )
+    session.add(db_reservationResource)
+    await session.commit()
+    await session.refresh(db_reservationResource)
+
+    public_reservationResource = PublicReservationResource.from_orm(
+        db_reservationResource
+    )
+
+    response = Response(
+        status=True, more_available=False, items=[public_reservationResource]
+    )
+    return response
+
+
+@reservationresources_router.delete(
+    "/{reservationResource_id}", response_model=Response[None]
+)
+async def delete_reservationResource(
+    session: SessionDep, reservationResource_id: int
+) -> Response[None]:
+    db_reservationResource = await session.get(
+        DBReservationResource, reservationResource_id
+    )
+    if not db_reservationResource:
+        raise HTTPException(status_code=404, detail="ReservationResource not found")
+
+    db_reservationResource.sqlmodel_update({"active": False})
+    session.add(db_reservationResource)
+    await session.commit()
+    await session.refresh(db_reservationResource)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@reservationresources_router.patch(
+    "/{reservationResource_id}", response_model=Response[PublicReservationResource]
+)
+async def update_reservationResource(
+    session: SessionDep,
+    reservationResource_id: int,
+    reservationResource: UpdateReservationResource,
+) -> Response[PublicReservationResource]:
+    query = select(DBReservationResource).where(
+        DBReservationResource.id == reservationResource_id
+    )
+    result = await session.execute(query)
+    db_reservationResource: DBReservationResource | None = result.scalar_one_or_none()
+
+    if not db_reservationResource:
+        raise HTTPException(status_code=404, detail="ReservationResource not found")
+
+    reservationResource_data = reservationResource.model_dump(exclude_unset=True)
+    db_reservationResource.sqlmodel_update(reservationResource_data)
+
+    session.add(db_reservationResource)
+    await session.commit()
+    await session.refresh(db_reservationResource)
+
+    public_reservationResource = PublicReservationResource.from_orm(
+        db_reservationResource
+    )
+
+    return Response(
+        status=True, more_available=False, items=[public_reservationResource]
+    )

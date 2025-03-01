@@ -348,7 +348,7 @@ class BaseReservationResource(SQLModel):
     )
 
 
-class DBReservationResource(BaseReservationResource):
+class DBReservationResource(BaseReservationResource, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     resource_id: int = Field(default=None, index=True, foreign_key="dbresource.id")
     active: bool = Field(default=True)
