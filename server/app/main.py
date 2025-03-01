@@ -7,45 +7,33 @@ from app.api.endpoints import collections_router
 from app.api.endpoints import groups_router
 from app.api.endpoints import resources_router
 from app.api.endpoints import resourcetypes_router
+from app.api.endpoints import reservations_router
 
 from sqlmodel import SQLModel
 
 tags_metadata = [
-    {
-        "name": "Users",
-        "description": "Operations related to user management"
-    },
-    {
-        "name": "Status",
-        "description": "Get the status of the API"
-    },
+    {"name": "Users", "description": "Operations related to user management"},
+    {"name": "Status", "description": "Get the status of the API"},
     {
         "name": "Organizations",
-        "description": "Operations related to organization management"
+        "description": "Operations related to organization management",
     },
     {
         "name": "Collections",
-        "description": "Operations related to management of collections"
+        "description": "Operations related to management of collections",
     },
-    {
-        "name": "Groups",
-        "description": "Operations related to management of groups"
-    },
+    {"name": "Groups", "description": "Operations related to management of groups"},
     {
         "name": "Resources",
-        "description": "Operations related to management of resources"
+        "description": "Operations related to management of resources",
     },
     {
         "name": "ResourceTypes",
-        "description": "Operations related to management of resource types"
-    }
+        "description": "Operations related to management of resource types",
+    },
 ]
 
-app = FastAPI(
-    title="Sitsit",
-    openapi_tags=tags_metadata,
-    description="Sitsit API"
-)
+app = FastAPI(title="Sitsit", openapi_tags=tags_metadata, description="Sitsit API")
 
 
 @app.on_event("startup")
@@ -55,6 +43,8 @@ async def on_startup():
 
 
 status_router = APIRouter(tags=["Status"])
+
+
 @status_router.get("/")
 async def status():
     return {"status": "ok"}
@@ -67,3 +57,4 @@ app.include_router(collections_router)
 app.include_router(groups_router)
 app.include_router(resources_router)
 app.include_router(resourcetypes_router)
+app.include_router(reservations_router)

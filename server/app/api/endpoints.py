@@ -51,6 +51,13 @@ from app.models.models import (
 )
 
 from app.models.models import (
+    CreateReservation,
+    DBReservation,
+    PublicReservation,
+    UpdateReservation,
+)
+
+from app.models.models import (
     Response,
 )
 
@@ -105,7 +112,7 @@ async def create_user(session: SessionDep, user: CreateUser):
 
     public_user = PublicUser.from_orm(db_user)
 
-    response = Response(status=True, more_available=False, users=[public_user])
+    response = Response(status=True, more_available=False, items=[public_user])
     return response
 
 
@@ -166,7 +173,7 @@ async def read_orgs(
 
     more_available = len(orgs) > limit
 
-    response = Response(status=True, more_available=more_available, organizations=orgs)
+    response = Response(status=True, more_available=more_available, items=orgs)
 
     return response
 
@@ -195,7 +202,7 @@ async def create_org(session: SessionDep, org: CreateOrg):
     public_org = PublicOrg.from_orm(db_org)
 
     response = Response[PublicOrg](
-        status=True, more_available=False, organizations=[public_org]
+        status=True, more_available=False, items=[public_org]
     )
     return response
 
@@ -258,7 +265,7 @@ async def read_collections(
     more_available = len(collections) > limit
 
     response = Response[PublicCollection](
-        status=True, more_available=more_available, collections=collections
+        status=True, more_available=more_available, items=collections
     )
 
     return response
@@ -289,7 +296,7 @@ async def create_collection(session: SessionDep, org: CreateCollection):
     public_collection = PublicCollection.from_orm(db_collection)
 
     response = Response[PublicCollection](
-        status=True, more_available=False, collections=[public_collection]
+        status=True, more_available=False, items=[public_collection]
     )
     return response
 
@@ -353,7 +360,7 @@ async def read_groups(
     more_available = len(groups) > limit
 
     response = Response[PublicGroup](
-        status=True, more_available=more_available, groups=groups
+        status=True, more_available=more_available, items=groups
     )
 
     return response
@@ -378,7 +385,7 @@ async def create_group(session: SessionDep, group: CreateGroup):
     public_group = PublicGroup.from_orm(db_group)
 
     response = Response[PublicGroup](
-        status=True, more_available=False, groups=[public_group]
+        status=True, more_available=False, items=[public_group]
     )
     return response
 
@@ -442,7 +449,7 @@ async def read_resources(
     more_available = len(resources) > limit
 
     response = Response[PublicResource](
-        status=True, more_available=more_available, resources=resources
+        status=True, more_available=more_available, items=resources
     )
 
     return response
@@ -473,7 +480,7 @@ async def create_resource(session: SessionDep, org: CreateResource):
     public_resource = PublicResource.from_orm(db_resource)
 
     response = Response[PublicResource](
-        status=True, more_available=False, resources=[public_resource]
+        status=True, more_available=False, items=[public_resource]
     )
     return response
 
@@ -608,3 +615,103 @@ async def update_resourceType(
     public_resourceType = PublicResourceType.from_orm(db_resourceType)
 
     return Response(status=True, more_available=False, items=[public_resourceType])
+
+
+## Reservations ##
+
+
+reservations_router = APIRouter(prefix="/reservations", tags=["Reservations"])
+
+
+@reservations_router.get("/", response_model=Response[PublicReservation])
+async def read_reservations(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+) -> Response[PublicReservation]:
+    query = select(DBReservation).where(DBReservation.active)
+    query = query.offset(offset).limit(limit + 1)
+    result = await session.execute(query)
+    reservations: list[PublicReservation] = result.scalars().all()
+
+    more_available = len(reservations) > limit
+
+    response = Response(status=True, more_available=more_available, items=reservations)
+
+    return response
+
+
+@reservations_router.get(
+    "/{reservation_id}", response_model=Response[PublicReservation]
+)
+async def get_one_reservation(
+    session: SessionDep, reservation_id: int
+) -> Response[PublicReservation]:
+    query = (
+        select(DBReservation)
+        .where(DBReservation.id == reservation_id)
+        .where(DBReservation.active)
+    )
+    result = await session.execute(query)
+    reservation: PublicReservation = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[reservation])
+    return response
+
+
+@reservations_router.post("/", response_model=Response[PublicReservation])
+async def create_reservation(session: SessionDep, reservation: CreateReservation):
+    db_reservation = DBReservation(
+        name=reservation.name,
+        user_id=reservation.user_id,
+        contact_info=reservation.contact_info,
+        description=reservation.description,
+    )
+    session.add(db_reservation)
+    await session.commit()
+    await session.refresh(db_reservation)
+
+    public_reservation = PublicReservation.from_orm(db_reservation)
+
+    response = Response(status=True, more_available=False, items=[public_reservation])
+    return response
+
+
+@reservations_router.delete("/{reservation_id}", response_model=Response[None])
+async def delete_reservation(
+    session: SessionDep, reservation_id: int
+) -> Response[None]:
+    db_reservation = await session.get(DBReservation, reservation_id)
+    if not db_reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    db_reservation.sqlmodel_update({"active": False})
+    session.add(db_reservation)
+    await session.commit()
+    await session.refresh(db_reservation)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@reservations_router.patch(
+    "/{reservation_id}", response_model=Response[PublicReservation]
+)
+async def update_reservation(
+    session: SessionDep, reservation_id: int, reservation: UpdateReservation
+) -> Response[PublicReservation]:
+    query = select(DBReservation).where(DBReservation.id == reservation_id)
+    result = await session.execute(query)
+    db_reservation: DBReservation | None = result.scalar_one_or_none()
+
+    if not db_reservation:
+        raise HTTPException(status_code=404, detail="Reservation not found")
+
+    reservation_data = reservation.model_dump(exclude_unset=True)
+    db_reservation.sqlmodel_update(reservation_data)
+
+    session.add(db_reservation)
+    await session.commit()
+    await session.refresh(db_reservation)
+
+    public_reservation = PublicReservation.from_orm(db_reservation)
+
+    return Response(status=True, more_available=False, items=[public_reservation])
