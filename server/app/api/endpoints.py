@@ -22,6 +22,7 @@ from app.models.models import (
     CreateCollection,
     DBCollection,
     PublicCollection,
+    UpdateCollection,
     CollectionResponse,
     CreateGroup,
     DBGroup,
@@ -249,6 +250,20 @@ async def read_collections(
     return response
 
 
+@collections_router.get("/{collection_id}", response_model=Response[PublicCollection])
+async def get_one_collection(
+    session: SessionDep,
+    collection_id: int
+) -> Response[PublicCollection]:
+    query = select(DBCollection).where(DBCollection.id == collection_id).where(DBCollection.active)
+    result = await session.execute(query)
+    collection: PublicCollection = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[collection])
+    return response
+
+
+
+
 @collections_router.post("/", response_model=CollectionResponse)
 async def create_collection(session: SessionDep, org: CreateCollection):
     db_collection = DBCollection(name=org.name)
@@ -262,6 +277,49 @@ async def create_collection(session: SessionDep, org: CreateCollection):
         status=True, more_available=False, collections=[public_collection]
     )
     return response
+
+
+@collections_router.delete("/{collection_id}", response_model=Response[None])
+async def delete_collection(
+    session: SessionDep,
+    collection_id: int
+) -> Response[None]:
+    db_collection = await session.get(DBCollection, collection_id)
+    if not db_collection:
+        raise HTTPException(status_code=404, detail="Collection not found")
+
+    db_collection.sqlmodel_update({"active": False})
+    session.add(db_collection)
+    await session.commit()
+    await session.refresh(db_collection)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@collections_router.patch("/{collection_id}", response_model=Response[PublicCollection])
+async def update_collection(
+    session: SessionDep,
+    collection_id: int,
+    collection: UpdateCollection
+) -> Response[PublicCollection]:
+    query = select(DBCollection).where(DBCollection.id == collection_id)
+    result = await session.execute(query)
+    db_collection: DBCollection | None = result.scalar_one_or_none()
+
+    if not db_collection:
+        raise HTTPException(status_code=404, detail="Collection not found")
+
+    collection_data = collection.model_dump(exclude_unset=True)
+    db_collection.sqlmodel_update(collection_data)
+
+    session.add(db_collection)
+    await session.commit()
+    await session.refresh(db_collection)
+
+    public_collection = PublicCollection.from_orm(db_collection)
+
+    return Response(status=True, more_available=False, items=[public_collection])
+
 
 
 ## Groups ##
