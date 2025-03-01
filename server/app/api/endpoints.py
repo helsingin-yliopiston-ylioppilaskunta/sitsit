@@ -27,6 +27,7 @@ from app.models.models import (
     CreateGroup,
     DBGroup,
     PublicGroup,
+    UpdateGroup,
     GroupResponse,
     CreateResource,
     DBResource,
@@ -321,8 +322,8 @@ async def update_collection(
     return Response(status=True, more_available=False, items=[public_collection])
 
 
-
 ## Groups ##
+
 
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
 
@@ -347,6 +348,18 @@ async def read_groups(
     return response
 
 
+@groups_router.get("/{group_id}", response_model=Response[PublicGroup])
+async def get_one_group(
+    session: SessionDep,
+    group_id: int
+) -> Response[PublicGroup]:
+    query = select(DBGroup).where(DBGroup.id == group_id).where(DBGroup.active)
+    result = await session.execute(query)
+    group: PublicGroup = result.scalars().one()
+    response = Response(status=True, more_available=False, items=[group])
+    return response
+
+
 @groups_router.post("/", response_model=GroupResponse)
 async def create_group(session: SessionDep, group: CreateGroup):
     db_group = DBGroup(name=group.name, collection_id=group.collection_id)
@@ -358,6 +371,48 @@ async def create_group(session: SessionDep, group: CreateGroup):
 
     response = GroupResponse(status=True, more_available=False, groups=[public_group])
     return response
+
+@groups_router.delete("/{group_id}", response_model=Response[None])
+async def delete_group(
+    session: SessionDep,
+    group_id: int
+) -> Response[None]:
+    db_group = await session.get(DBGroup, group_id)
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    db_group.sqlmodel_update({"active": False})
+    session.add(db_group)
+    await session.commit()
+    await session.refresh(db_group)
+
+    return Response(status=True, more_available=False, items=[])
+
+
+@groups_router.patch("/{group_id}", response_model=Response[PublicGroup])
+async def update_group(
+    session: SessionDep,
+    group_id: int,
+    group: UpdateGroup
+) -> Response[PublicGroup]:
+    query = select(DBGroup).where(DBGroup.id == group_id)
+    result = await session.execute(query)
+    db_group: DBGroup | None = result.scalar_one_or_none()
+
+    if not db_group:
+        raise HTTPException(status_code=404, detail="Group not found")
+
+    group_data = group.model_dump(exclude_unset=True)
+    db_group.sqlmodel_update(group_data)
+
+    session.add(db_group)
+    await session.commit()
+    await session.refresh(db_group)
+
+    public_group = PublicGroup.from_orm(db_group)
+
+    return Response(status=True, more_available=False, items=[public_group])
+
 
 
 ## Resources ##
