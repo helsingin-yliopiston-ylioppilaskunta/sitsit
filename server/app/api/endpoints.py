@@ -35,6 +35,8 @@ from app.models.models import (
     DBGroup,
     PublicGroup,
     PublicGroupWithCollection,
+    PublicGroupWithResources,
+    PublicGroupWithCollectionAndResources,
     UpdateGroup,
 )
 
@@ -42,6 +44,9 @@ from app.models.models import (
     CreateResource,
     DBResource,
     PublicResource,
+    PublicResourceWithGroup,
+    PublicResourceWithResourceType,
+    PublicResourceWithGroupAndResourceType,
     UpdateResource,
 )
 
@@ -49,6 +54,7 @@ from app.models.models import (
     CreateResourceType,
     DBResourceType,
     PublicResourceType,
+    PublicResourceTypeWithResources,
     UpdateResourceType,
 )
 
@@ -274,7 +280,11 @@ async def read_collections(
     query = (
         select(DBCollection)
         .where(DBCollection.active)
-        .options(selectinload(DBCollection.groups))
+        .options(
+            selectinload(DBCollection.groups)
+            .selectinload(DBGroup.resources)
+            .selectinload(DBResource.resource_type)
+        )
     )
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
@@ -301,6 +311,11 @@ async def get_one_collection(
         select(DBCollection)
         .where(DBCollection.id == collection_id)
         .where(DBCollection.active)
+        .options(
+            selectinload(DBCollection.groups)
+            .selectinload(DBGroup.resources)
+            .selectinload(DBResource.resource_type)
+        )
     )
     result = await session.execute(query)
     collection: PublicCollectionWithGroups = result.scalars().one()
@@ -366,20 +381,23 @@ async def update_collection(
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
 
 
-@groups_router.get("/", response_model=Response[PublicGroupWithCollection])
+@groups_router.get("/", response_model=Response[PublicGroupWithCollectionAndResources])
 async def read_groups(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicGroupWithCollection]:
+) -> Response[PublicGroupWithCollectionAndResources]:
     query = (
-        select(DBGroup).where(DBGroup.active).options(selectinload(DBGroup.collection))
+        select(DBGroup)
+        .where(DBGroup.active)
+        .options(
+            selectinload(DBGroup.collection),
+            selectinload(DBGroup.resources).selectinload(DBResource.resource_type),
+        )
     )
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     groups: list[PublicGroupWithCollection] = result.scalars().all()
-
-    print(groups)
 
     more_available = len(groups) > limit
 
@@ -388,9 +406,21 @@ async def read_groups(
     return response
 
 
-@groups_router.get("/{group_id}", response_model=Response[PublicGroup])
-async def get_one_group(session: SessionDep, group_id: int) -> Response[PublicGroup]:
-    query = select(DBGroup).where(DBGroup.id == group_id).where(DBGroup.active)
+@groups_router.get(
+    "/{group_id}", response_model=Response[PublicGroupWithCollectionAndResources]
+)
+async def get_one_group(
+    session: SessionDep, group_id: int
+) -> Response[PublicGroupWithCollectionAndResources]:
+    query = (
+        select(DBGroup)
+        .where(DBGroup.id == group_id)
+        .where(DBGroup.active)
+        .options(
+            selectinload(DBGroup.collection),
+            selectinload(DBGroup.resources).selectinload(DBResource.resource_type),
+        )
+    )
     result = await session.execute(query)
     group: PublicGroup = result.scalars().one()
     response = Response(status=True, more_available=False, items=[group])
@@ -455,22 +485,28 @@ async def update_group(
 resources_router = APIRouter(prefix="/resources", tags=["Resources"])
 
 
-@resources_router.get("/", response_model=Response[PublicResource])
+@resources_router.get(
+    "/", response_model=Response[PublicResourceWithGroupAndResourceType]
+)
 async def read_resources(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicResource]:
-    query = select(DBResource).where(DBResource.active)
+) -> Response[PublicResourceWithGroupAndResourceType]:
+    query = (
+        select(DBResource)
+        .where(DBResource.active)
+        .options(selectinload(DBResource.group), selectinload(DBResource.resource_type))
+    )
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
-    resources: list[PublicResource] = result.scalars().all()
+    resources: list[PublicResourceWithGroupAndResourceType] = result.scalars().all()
 
     print(resources)
 
     more_available = len(resources) > limit
 
-    response = Response[PublicResource](
+    response = Response[PublicResourceWithGroupAndResourceType](
         status=True, more_available=more_available, items=resources
     )
 
@@ -482,7 +518,10 @@ async def get_one_resource(
     session: SessionDep, resource_id: int
 ) -> Response[PublicResource]:
     query = (
-        select(DBResource).where(DBResource.id == resource_id).where(DBResource.active)
+        select(DBResource)
+        .where(DBResource.id == resource_id)
+        .where(DBResource.active)
+        .options(selectinload(DBResource.group), selectinload(DBResource.resource_type))
     )
     result = await session.execute(query)
     resource: PublicResource = result.scalars().one()

@@ -118,7 +118,7 @@ class PublicCollection(BaseCollection):
 
 class PublicCollectionWithGroups(BaseCollection):
     id: int
-    groups: list["PublicGroup"]
+    groups: list["PublicGroupWithResources"]
 
 
 class CollectionResponse(BaseResponse):
@@ -136,6 +136,7 @@ class DBGroup(BaseGroup, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     collection_id: Optional[int] = Field(default=None, foreign_key="dbcollection.id")
     collection: DBCollection = Relationship(back_populates="groups")
+    resources: list["DBResource"] = Relationship(back_populates="group")
     active: bool = Field(default=True)
 
 
@@ -157,6 +158,17 @@ class PublicGroupWithCollection(BaseGroup):
     collection: PublicCollection
 
 
+class PublicGroupWithResources(BaseGroup):
+    id: int
+    resources: list["PublicResourceWithResourceType"]
+
+
+class PublicGroupWithCollectionAndResources(BaseGroup):
+    id: int
+    collection: PublicCollection
+    resources: list["PublicResourceWithResourceType"]
+
+
 class GroupResponse(BaseResponse):
     groups: list[PublicGroup]
 
@@ -171,6 +183,7 @@ class BaseResourceType(SQLModel):
 class DBResourceType(BaseResourceType, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     active: bool = Field(default=True)
+    resources: list["DBResource"] = Relationship(back_populates="resource_type")
 
 
 class CreateResourceType(BaseResourceType):
@@ -183,6 +196,11 @@ class UpdateResourceType(BaseResourceType):
 
 class PublicResourceType(BaseResourceType):
     id: int
+
+
+class PublicResourceTypeWithResources(BaseResourceType):
+    id: int
+    resources: list["DBResource"]
 
 
 class ResourceTypeResponse(BaseResponse):
@@ -199,9 +217,11 @@ class BaseResource(SQLModel):
 class DBResource(BaseResource, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     group_id: Optional[int] = Field(default=None, foreign_key="dbgroup.id")
+    group: Optional[DBGroup] = Relationship(back_populates="resources")
     resource_type_id: Optional[int] = Field(
         default=None, foreign_key="dbresourcetype.id"
     )
+    resource_type: DBResourceType = Relationship(back_populates="resources")
     active: bool = Field(default=True)
 
 
@@ -219,6 +239,23 @@ class PublicResource(BaseResource):
     id: int
     group_id: int
     resource_type_id: int
+
+
+class PublicResourceWithGroup(BaseResource):
+    id: int
+    group: PublicGroup
+    resource_type_id: int
+
+
+class PublicResourceWithResourceType(BaseResource):
+    id: int
+    resource_type: PublicResourceType
+
+
+class PublicResourceWithGroupAndResourceType(BaseResponse):
+    id: int
+    group: PublicGroup
+    resource_type: PublicResourceType
 
 
 class ResourceResponse(BaseResponse):
