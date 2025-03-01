@@ -26,6 +26,7 @@ from app.models.models import (
     CreateCollection,
     DBCollection,
     PublicCollection,
+    PublicCollectionWithGroups,
     UpdateCollection,
 )
 
@@ -33,6 +34,7 @@ from app.models.models import (
     CreateGroup,
     DBGroup,
     PublicGroup,
+    PublicGroupWithCollection,
     UpdateGroup,
 )
 
@@ -263,39 +265,45 @@ async def update_org(
 collections_router = APIRouter(prefix="/collections", tags=["Collections"])
 
 
-@collections_router.get("/", response_model=Response[PublicCollection])
+@collections_router.get("/", response_model=Response[PublicCollectionWithGroups])
 async def read_collections(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicCollection]:
-    query = select(DBCollection).where(DBCollection.active)
+) -> Response[PublicCollectionWithGroups]:
+    query = (
+        select(DBCollection)
+        .where(DBCollection.active)
+        .options(selectinload(DBCollection.groups))
+    )
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
-    collections: list[PublicCollection] = result.scalars().all()
+    collections: list[PublicCollectionWithGroups] = result.scalars().all()
 
     print(collections)
 
     more_available = len(collections) > limit
 
-    response = Response[PublicCollection](
+    response = Response[PublicCollectionWithGroups](
         status=True, more_available=more_available, items=collections
     )
 
     return response
 
 
-@collections_router.get("/{collection_id}", response_model=Response[PublicCollection])
+@collections_router.get(
+    "/{collection_id}", response_model=Response[PublicCollectionWithGroups]
+)
 async def get_one_collection(
     session: SessionDep, collection_id: int
-) -> Response[PublicCollection]:
+) -> Response[PublicCollectionWithGroups]:
     query = (
         select(DBCollection)
         .where(DBCollection.id == collection_id)
         .where(DBCollection.active)
     )
     result = await session.execute(query)
-    collection: PublicCollection = result.scalars().one()
+    collection: PublicCollectionWithGroups = result.scalars().one()
     response = Response(status=True, more_available=False, items=[collection])
     return response
 
@@ -358,24 +366,24 @@ async def update_collection(
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
 
 
-@groups_router.get("/", response_model=Response[PublicGroup])
+@groups_router.get("/", response_model=Response[PublicGroupWithCollection])
 async def read_groups(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicGroup]:
-    query = select(DBGroup).where(DBGroup.active)
+) -> Response[PublicGroupWithCollection]:
+    query = (
+        select(DBGroup).where(DBGroup.active).options(selectinload(DBGroup.collection))
+    )
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
-    groups: list[PublicGroup] = result.scalars().all()
+    groups: list[PublicGroupWithCollection] = result.scalars().all()
 
     print(groups)
 
     more_available = len(groups) > limit
 
-    response = Response[PublicGroup](
-        status=True, more_available=more_available, items=groups
-    )
+    response = Response(status=True, more_available=more_available, items=groups)
 
     return response
 

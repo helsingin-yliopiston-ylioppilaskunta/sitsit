@@ -101,6 +101,7 @@ class BaseCollection(SQLModel):
 class DBCollection(BaseCollection, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     active: bool = Field(default=True)
+    groups: list["DBGroup"] = Relationship(back_populates="collection")
 
 
 class CreateCollection(BaseCollection):
@@ -113,6 +114,11 @@ class UpdateCollection(BaseCollection):
 
 class PublicCollection(BaseCollection):
     id: int
+
+
+class PublicCollectionWithGroups(BaseCollection):
+    id: int
+    groups: list["PublicGroup"]
 
 
 class CollectionResponse(BaseResponse):
@@ -129,6 +135,7 @@ class BaseGroup(SQLModel):
 class DBGroup(BaseGroup, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     collection_id: Optional[int] = Field(default=None, foreign_key="dbcollection.id")
+    collection: DBCollection = Relationship(back_populates="groups")
     active: bool = Field(default=True)
 
 
@@ -143,6 +150,11 @@ class UpdateGroup(BaseGroup):
 class PublicGroup(BaseGroup):
     id: int
     collection_id: int
+
+
+class PublicGroupWithCollection(BaseGroup):
+    id: int
+    collection: PublicCollection
 
 
 class GroupResponse(BaseResponse):
