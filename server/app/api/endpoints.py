@@ -62,6 +62,9 @@ from app.models.models import (
     CreateReservation,
     DBReservation,
     PublicReservation,
+    PublicReservationWithUser,
+    PublicReservationWithTimesAndResources,
+    PublicReservationWithUserAndTimesAndResources,
     UpdateReservation,
 )
 

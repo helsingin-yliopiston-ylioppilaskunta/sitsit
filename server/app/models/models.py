@@ -272,6 +272,9 @@ class BaseReservation(SQLModel):
 class DBReservation(BaseReservation, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="dbuser.id")
+    user: DBUser = Relationship(back_populates="user")
+    times: list["DBReservationTime"] = Relationship(back_populates="user")
+    resources: list["DBReservationResource"] = Relationship(back_populates="user")
     contact_info: Optional[str] = Field()
     description: Optional[str] = Field()
     active: bool = Field(default=True)
@@ -292,6 +295,30 @@ class UpdateReservation(BaseReservation):
 class PublicReservation(BaseReservation):
     id: int
     user_id: int
+    contact_info: Optional[str]
+    description: Optional[str]
+
+
+class PublicReservationWithUser(BaseReservation):
+    id: int
+    user: PublicUserWithOrg
+    contact_info: Optional[str]
+    description: Optional[str]
+
+
+class PublicReservationWithTimesAndResources(BaseReservation):
+    id: int
+    times: list["PublicReservationTime"]
+    resources: list["PublicReservationResource"]
+    contact_info: Optional[str]
+    description: Optional[str]
+
+
+class PublicReservationWithUserAndTimesAndResources(BaseReservation):
+    id: int
+    user: PublicUserWithOrg
+    times: list["PublicReservationTime"]
+    resources: list["PublicReservationResource"]
     contact_info: Optional[str]
     description: Optional[str]
 
@@ -368,6 +395,7 @@ class DBReservationTime(BaseReservationTime, table=True):
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), server_default=func.now()),
     )
+    reservation: DBReservation = Relationship(back_populates="times")
     active: bool = Field(default=True)
 
 
@@ -400,6 +428,7 @@ class BaseReservationResource(SQLModel):
 class DBReservationResource(BaseReservationResource, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     resource_id: int = Field(default=None, index=True, foreign_key="dbresource.id")
+    reservation: DBReservation = Relationship(back_populates="resources")
     active: bool = Field(default=True)
 
 
