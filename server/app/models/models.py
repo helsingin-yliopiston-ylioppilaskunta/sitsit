@@ -65,6 +65,7 @@ class DBUser(BaseUser, table=True):
     active: bool = Field(default=True)
     org_id: Optional[int] = Field(default=None, foreign_key="dborg.id")
     org: DBOrg = Relationship(back_populates="users")
+    reservations: "DBReservation" = Relationship(back_populates="user")
 
 
 class CreateUser(BaseUser):
@@ -272,9 +273,11 @@ class BaseReservation(SQLModel):
 class DBReservation(BaseReservation, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: Optional[int] = Field(default=None, foreign_key="dbuser.id")
-    user: DBUser = Relationship(back_populates="user")
-    times: list["DBReservationTime"] = Relationship(back_populates="user")
-    resources: list["DBReservationResource"] = Relationship(back_populates="user")
+    user: DBUser = Relationship(back_populates="reservations")
+    times: list["DBReservationTime"] = Relationship(back_populates="reservation")
+    resources: list["DBReservationResource"] = Relationship(
+        back_populates="reservation"
+    )
     contact_info: Optional[str] = Field()
     description: Optional[str] = Field()
     active: bool = Field(default=True)
