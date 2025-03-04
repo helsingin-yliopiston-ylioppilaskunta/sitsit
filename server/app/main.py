@@ -1,5 +1,7 @@
 from fastapi import FastAPI, APIRouter
 
+from fastapi.middleware.cors import CORSMiddleware
+
 from app.db.database import engine
 from app.api.endpoints import users_router
 from app.api.endpoints import orgs_router
@@ -36,6 +38,15 @@ tags_metadata = [
 ]
 
 app = FastAPI(title="Sitsit", openapi_tags=tags_metadata, description="Sitsit API")
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Your Vite dev server
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.on_event("startup")
