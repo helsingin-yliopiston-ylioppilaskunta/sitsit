@@ -2,21 +2,20 @@ import { useEffect, useState } from 'react';
 import './App.css'
 
 import User from "./components/User";
+import { fetch_user } from "./api";
 
 function App() {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        async function fetchUser() {
-            const response = await fetch("http://localhost:8000/users/1");
-            const data = await response.json();
-
-            setUserData(data);
+        async function loadUser() {
+            const user = await fetch_user(1);
+            setUserData(user);
             setLoading(false);
         }
 
-        fetchUser();
+        loadUser()
     }, [])
 
     if (loading) {
@@ -27,7 +26,7 @@ function App() {
             <div className="App">
                 <p>Moi</p>
                 <input type="button" value="Hei!"></input>
-                <User userData={userData.items[0]} />
+                <User userData={userData} />
             </div>
         )
     }

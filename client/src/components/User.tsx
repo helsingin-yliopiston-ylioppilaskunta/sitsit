@@ -2,7 +2,6 @@ import { useState } from 'react';
 import './User.css'
 
 function User(props) {
-    console.log(props.userData);
     const [username, setUsername] = useState(props.userData.username);
 
     function saveUser() {
