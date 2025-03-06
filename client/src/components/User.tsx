@@ -41,7 +41,7 @@ function User(props) {
         }
     );
 
-    const { mutate: updateUser, error: updateError, isLoading: updating } = api.useMutation(
+    const { mutate: updateUser, error: updateError, isPending: updating } = api.useMutation(
         "patch", "/users/{user_id}", {
             params: {
                 path: { user_id: props.userId }
@@ -105,6 +105,7 @@ function User(props) {
             <h3>User</h3>
             <div>
                 <p>Status: {statusToString(status)}</p>
+                <p>Updating: {updating ? "yes" : "no"}</p>
                 <p>Modified: {modified ? "modified" : "changes saved"}</p>
                 <p>Error: {errorMsg}</p>
             </div>
