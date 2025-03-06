@@ -1,0 +1,11 @@
+.User {
+    background-color: var(--color-blood-red);
+
+    padding: var(--gap);
+
+    border: var(--border);
+    border-radius: var(--radius);
+
+    display: grid;
+    gap: var(--gap);
+}

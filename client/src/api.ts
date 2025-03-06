@@ -1,23 +1,16 @@
-import createClient from "openapi-fetch";
-import type { paths, components } from "./schema";
+import createFetchClient from "openapi-fetch";
+import createClient from "openapi-react-query";
+import type { paths } from "./schema";
 
-const client = createClient<paths>({ baseUrl: "http://localhost:8000/" });
-
-async function fetch_user(id: int) {
-    const { data, error } = await client.GET("/users/{user_id}", {
-        params: {
-            path: { user_id: id }
+const fetchClient = createFetchClient<paths>({
+    baseUrl: "http://localhost:8000/",
+    init: {
+        headers: {
+            "Content-Type": "application/json"
         }
-    })
-
-    if (data) {
-        return data.items[0]
-    } else {
-        return error
     }
-}
+});
+const api = createClient(fetchClient);
 
-export {
-    fetch_user
-}
+export default api
 

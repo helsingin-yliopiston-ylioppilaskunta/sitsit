@@ -8,7 +8,7 @@
     --color-bg: var(--color-black-bean);
     --color-fg: var(--color-light-orange);
 
-    --color-border: var(--color-brown);
+    --color-border: var(--color-bronze);
     --border: 0.15rem solid var(--color-border);
     --radius: 0.25rem;
 
@@ -49,7 +49,7 @@ textarea {
     box-sizing: border-box;
     display: inline-block;
 
-    background-color: var(--color-blood-red);
+    background-color: var(--color-brown);
     color: var(--color-fg);
 
     border: var(--border);

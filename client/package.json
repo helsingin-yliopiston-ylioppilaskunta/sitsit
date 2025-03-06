@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "openapi-fetch": "^0.13.4",
+    "openapi-react-query": "^0.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
