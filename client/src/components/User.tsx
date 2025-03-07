@@ -29,7 +29,7 @@ function statusToString(status: Status) {
 }
 
 interface userProps {
-    userId: number;
+    userId?: number;
 }
 
 function User(props: userProps) {
@@ -39,13 +39,13 @@ function User(props: userProps) {
 
     const [username, setUsername] = useState("");
 
-    const { data, error: getError, isLoading } = api.useQuery(
+    const { data, error: getError, isLoading } = (props.userId) ? api.useQuery(
         "get", "/users/{user_id}", {
         params: {
-            path: { user_id: props.userId }
+            path: { user_id: props.userId || -1 }
         },
     }
-    );
+    ) : { data: undefined, error: undefined, isLoading: false };
 
     const { mutate: updateUser, isPending: updating } =
         api.useMutation(
@@ -63,6 +63,19 @@ function User(props: userProps) {
         }
         );
 
+    const { mutate: createUser, isPending: creating } =
+        api.useMutation(
+            "post", "/users/", {
+            onSuccess: () => {
+                setModified(false);
+            },
+            onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
+                setStatus(Status.Error)
+                setErrorMsg(error.toString())
+            }
+        }
+        );
+
     const handleUpdateUser = () => {
         const user = {
             username: username,
@@ -70,12 +83,18 @@ function User(props: userProps) {
             org_id: 1,
         };
 
-        updateUser({
-            params: {
-                path: { user_id: props.userId }
-            },
-            body: user
-        });
+        if (props.userId) {
+            updateUser({
+                params: {
+                    path: { user_id: props.userId || -1 }
+                },
+                body: user
+            });
+        } else {
+            createUser({
+                body: user
+            })
+        }
     };
 
     useEffect(() => {
@@ -84,6 +103,13 @@ function User(props: userProps) {
         }
 
     }, [isLoading])
+
+    useEffect(() => {
+        if (creating) {
+            setStatus(Status.Loading);
+        }
+
+    }, [creating])
 
     useEffect(() => {
         if (data) {
@@ -109,7 +135,7 @@ function User(props: userProps) {
 
     return (
         <div className="User">
-            <h3>User</h3>
+            <h3>{props.userId ? "Update" : "Create"} user</h3>
             <div>
                 <p>Status: {statusToString(status)}</p>
                 <p>Updating: {updating ? "yes" : "no"}</p>
