@@ -3,6 +3,8 @@ import api from './../api';
 
 import './User.css'
 
+import { components } from './../schema';
+
 enum Status {
     Loading,
     Success,
@@ -26,7 +28,11 @@ function statusToString(status: Status) {
     return str
 }
 
-function User(props) {
+interface userProps {
+    userId: number;
+}
+
+function User(props: userProps) {
     const [status, setStatus] = useState(Status.Loading);
     const [errorMsg, setErrorMsg] = useState("");
     const [modified, setModified] = useState(false);
@@ -35,28 +41,27 @@ function User(props) {
 
     const { data, error: getError, isLoading } = api.useQuery(
         "get", "/users/{user_id}", {
-            params: {
-                path: { user_id: props.userId }
-            },
-        }
+        params: {
+            path: { user_id: props.userId }
+        },
+    }
     );
 
-    const { mutate: updateUser, error: updateError, isPending: updating } = api.useMutation(
-        "patch", "/users/{user_id}", {
+    const { mutate: updateUser, isPending: updating } =
+        api.useMutation(
+            "patch", "/users/{user_id}", {
             params: {
                 path: { user_id: props.userId }
             },
-            onSuccess: (data) => {
-                console.log("Modify successfull:", data)
+            onSuccess: () => {
                 setModified(false);
             },
-            onError: (error) => {
-                console.error("Failed:", error)
+            onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
-                setErrorMsg(error)
+                setErrorMsg(error.toString())
             }
         }
-    );
+        );
 
     const handleUpdateUser = () => {
         const user = {
@@ -84,17 +89,19 @@ function User(props) {
         if (data) {
             setStatus(Status.Success)
             const user = data.items[0];
-            setUsername(user.username);
+            setUsername(user.username || "");
         }
     }, [data])
 
     useEffect(() => {
-        setErrorMsg(getError) 
+        if (getError) {
+            setErrorMsg(getError.toString())
+        }
     }, [getError])
 
     useEffect(() => {
-        setErrorMsg(updateError) 
-    }, [updateError])
+        console.log(typeof errorMsg, errorMsg);
+    }, [errorMsg])
 
     useEffect(() => {
         console.log("Status:", status)
@@ -115,7 +122,7 @@ function User(props) {
             }}>
                 <div className="row">
                     <label>Id</label>
-                    <input type="number" disabled="disabled" value={props.userId} />
+                    <input type="number" disabled={true} value={props.userId} />
                 </div>
                 <div>
                     <label>Username</label>

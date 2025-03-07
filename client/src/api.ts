@@ -4,10 +4,8 @@ import type { paths } from "./schema";
 
 const fetchClient = createFetchClient<paths>({
     baseUrl: "http://localhost:8000/",
-    init: {
-        headers: {
-            "Content-Type": "application/json"
-        }
+    headers: {
+        "Content-Type": "application/json"
     }
 });
 const api = createClient(fetchClient);
