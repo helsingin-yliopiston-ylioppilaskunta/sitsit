@@ -38,7 +38,9 @@ function User(props: userProps) {
     const [modified, setModified] = useState(false);
 
     const [username, setUsername] = useState("");
-    const [organization, setOrganization] = useState("");
+    const [organization, setOrganization] = useState(0);
+
+    const [orgs, setOrgs] = useState([]);
 
     const { data, error: getError, isLoading } = (props.userId) ? api.useQuery(
         "get", "/users/{user_id}", {
@@ -47,6 +49,10 @@ function User(props: userProps) {
         },
     }
     ) : { data: undefined, error: undefined, isLoading: false };
+
+    const { data: orgResponse, error: orgError, isLoading: orgLoading } = api.useQuery(
+        "get", "/orgs/"
+    );
 
     const { mutate: updateUser, isPending: updating } =
         api.useMutation(
@@ -83,7 +89,7 @@ function User(props: userProps) {
         const user = {
             username: username,
             hash: "xxx",
-            org_id: 1,
+            org_id: organization,
         };
 
         if (props.userId) {
@@ -125,9 +131,13 @@ function User(props: userProps) {
             setStatus(Status.Success)
             const user = data;
             setUsername(user.username || "");
-            setOrganization(user.org ? user.org.name : "");
+            setOrganization(user.org ? user.org.id : 0);
         }
     }, [data])
+
+    useEffect(() => {
+        setOrgs(orgResponse);
+    }, [orgResponse])
 
     useEffect(() => {
         if (getError) {
@@ -154,7 +164,17 @@ function User(props: userProps) {
                 </div>
                 <div className="row">
                     <label>Organization</label>
-                    <input type="text" disabled={true} value={organization} />
+                    <select name="organization" id="organization"
+                        value={organization}
+                        onChange={(e) => {
+                            setOrganization(e.target.value);
+                            setModified(true);
+                        }}
+                    >
+                        {orgs?.map((org) => (
+                            <option value={org.id} key={org.id} >{org.name}</option>
+                        ))}
+                    </select>
                 </div>
                 <div className="row">
                     <input type="submit" disabled={!modified} value="Tallenna" />
