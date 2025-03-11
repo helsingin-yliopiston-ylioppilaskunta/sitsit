@@ -63,7 +63,7 @@ function UserList() {
     useEffect(() => {
         if (data) {
             setStatus(Status.Success)
-            setUsers(data.items);
+            setUsers(data);
             console.log(data);
         }
     }, [data])

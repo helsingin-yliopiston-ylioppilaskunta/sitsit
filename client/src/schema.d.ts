@@ -577,141 +577,6 @@ export interface components {
             id: number;
             org: components["schemas"]["PublicOrg"] | null;
         };
-        /** Response[NoneType] */
-        Response_NoneType_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: null[];
-        };
-        /** Response[PublicCollectionWithGroups] */
-        Response_PublicCollectionWithGroups_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicCollectionWithGroups"][];
-        };
-        /** Response[PublicCollection] */
-        Response_PublicCollection_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicCollection"][];
-        };
-        /** Response[PublicGroupWithCollectionAndResources] */
-        Response_PublicGroupWithCollectionAndResources_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicGroupWithCollectionAndResources"][];
-        };
-        /** Response[PublicGroup] */
-        Response_PublicGroup_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicGroup"][];
-        };
-        /** Response[PublicOrgWithUsers] */
-        Response_PublicOrgWithUsers_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicOrgWithUsers"][];
-        };
-        /** Response[PublicOrg] */
-        Response_PublicOrg_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicOrg"][];
-        };
-        /** Response[PublicReservationResource] */
-        Response_PublicReservationResource_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicReservationResource"][];
-        };
-        /** Response[PublicReservationTime] */
-        Response_PublicReservationTime_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicReservationTime"][];
-        };
-        /** Response[PublicReservation] */
-        Response_PublicReservation_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicReservation"][];
-        };
-        /** Response[PublicResourceType] */
-        Response_PublicResourceType_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicResourceType"][];
-        };
-        /** Response[PublicResourceWithGroupAndResourceType] */
-        Response_PublicResourceWithGroupAndResourceType_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicResourceWithGroupAndResourceType"][];
-        };
-        /** Response[PublicResource] */
-        Response_PublicResource_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicResource"][];
-        };
-        /** Response[PublicUserWithOrg] */
-        Response_PublicUserWithOrg_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicUserWithOrg"][];
-        };
-        /** Response[PublicUser] */
-        Response_PublicUser_: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
-            /** Items */
-            items: components["schemas"]["PublicUser"][];
-        };
         /** UpdateCollection */
         UpdateCollection: {
             /** Name */
@@ -837,7 +702,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicUserWithOrg_"];
+                    "application/json": components["schemas"]["PublicUserWithOrg"][];
                 };
             };
             /** @description Validation Error */
@@ -870,7 +735,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicUser_"];
+                    "application/json": components["schemas"]["PublicUser"];
                 };
             };
             /** @description Validation Error */
@@ -901,7 +766,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicUserWithOrg_"];
+                    "application/json": components["schemas"]["PublicUserWithOrg"];
                 };
             };
             /** @description Validation Error */
@@ -932,7 +797,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -967,7 +832,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicUserWithOrg_"];
+                    "application/json": components["schemas"]["PublicUserWithOrg"];
                 };
             };
             /** @description Validation Error */
@@ -999,7 +864,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicOrg_"];
+                    "application/json": components["schemas"]["PublicOrg"][];
                 };
             };
             /** @description Validation Error */
@@ -1032,7 +897,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicOrg_"];
+                    "application/json": components["schemas"]["PublicOrg"];
                 };
             };
             /** @description Validation Error */
@@ -1063,7 +928,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicOrgWithUsers_"];
+                    "application/json": components["schemas"]["PublicOrgWithUsers"];
                 };
             };
             /** @description Validation Error */
@@ -1094,7 +959,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1129,7 +994,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicOrgWithUsers_"];
+                    "application/json": components["schemas"]["PublicOrgWithUsers"];
                 };
             };
             /** @description Validation Error */
@@ -1161,7 +1026,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicCollectionWithGroups_"];
+                    "application/json": components["schemas"]["PublicCollectionWithGroups"][];
                 };
             };
             /** @description Validation Error */
@@ -1194,7 +1059,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicCollection_"];
+                    "application/json": components["schemas"]["PublicCollection"];
                 };
             };
             /** @description Validation Error */
@@ -1225,7 +1090,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicCollectionWithGroups_"];
+                    "application/json": components["schemas"]["PublicCollectionWithGroups"];
                 };
             };
             /** @description Validation Error */
@@ -1256,7 +1121,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1291,7 +1156,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicCollection_"];
+                    "application/json": components["schemas"]["PublicCollection"];
                 };
             };
             /** @description Validation Error */
@@ -1323,7 +1188,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicGroupWithCollectionAndResources_"];
+                    "application/json": components["schemas"]["PublicGroupWithCollectionAndResources"];
                 };
             };
             /** @description Validation Error */
@@ -1356,7 +1221,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicGroup_"];
+                    "application/json": components["schemas"]["PublicGroup"];
                 };
             };
             /** @description Validation Error */
@@ -1387,7 +1252,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicGroupWithCollectionAndResources_"];
+                    "application/json": components["schemas"]["PublicGroupWithCollectionAndResources"];
                 };
             };
             /** @description Validation Error */
@@ -1418,7 +1283,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1453,7 +1318,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicGroup_"];
+                    "application/json": components["schemas"]["PublicGroup"];
                 };
             };
             /** @description Validation Error */
@@ -1485,7 +1350,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResourceWithGroupAndResourceType_"];
+                    "application/json": components["schemas"]["PublicResourceWithGroupAndResourceType"][];
                 };
             };
             /** @description Validation Error */
@@ -1518,7 +1383,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResource_"];
+                    "application/json": components["schemas"]["PublicResource"];
                 };
             };
             /** @description Validation Error */
@@ -1549,7 +1414,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResource_"];
+                    "application/json": components["schemas"]["PublicResource"];
                 };
             };
             /** @description Validation Error */
@@ -1580,7 +1445,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1615,7 +1480,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResource_"];
+                    "application/json": components["schemas"]["PublicResource"];
                 };
             };
             /** @description Validation Error */
@@ -1647,7 +1512,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResourceType_"];
+                    "application/json": components["schemas"]["PublicResourceType"][];
                 };
             };
             /** @description Validation Error */
@@ -1680,7 +1545,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResourceType_"];
+                    "application/json": components["schemas"]["PublicResourceType"];
                 };
             };
             /** @description Validation Error */
@@ -1711,7 +1576,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResourceType_"];
+                    "application/json": components["schemas"]["PublicResourceType"];
                 };
             };
             /** @description Validation Error */
@@ -1742,7 +1607,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1777,7 +1642,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicResourceType_"];
+                    "application/json": components["schemas"]["PublicResourceType"];
                 };
             };
             /** @description Validation Error */
@@ -1809,7 +1674,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservation_"];
+                    "application/json": components["schemas"]["PublicReservation"][];
                 };
             };
             /** @description Validation Error */
@@ -1842,7 +1707,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservation_"];
+                    "application/json": components["schemas"]["PublicReservation"];
                 };
             };
             /** @description Validation Error */
@@ -1873,7 +1738,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservation_"];
+                    "application/json": components["schemas"]["PublicReservation"];
                 };
             };
             /** @description Validation Error */
@@ -1904,7 +1769,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -1939,7 +1804,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservation_"];
+                    "application/json": components["schemas"]["PublicReservation"];
                 };
             };
             /** @description Validation Error */
@@ -1971,7 +1836,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationTime_"];
+                    "application/json": components["schemas"]["PublicReservationTime"][];
                 };
             };
             /** @description Validation Error */
@@ -2004,7 +1869,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationTime_"];
+                    "application/json": components["schemas"]["PublicReservationTime"];
                 };
             };
             /** @description Validation Error */
@@ -2035,7 +1900,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationTime_"];
+                    "application/json": components["schemas"]["PublicReservationTime"];
                 };
             };
             /** @description Validation Error */
@@ -2066,7 +1931,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -2101,7 +1966,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationTime_"];
+                    "application/json": components["schemas"]["PublicReservationTime"];
                 };
             };
             /** @description Validation Error */
@@ -2133,7 +1998,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationResource_"];
+                    "application/json": components["schemas"]["PublicReservationResource"][];
                 };
             };
             /** @description Validation Error */
@@ -2166,7 +2031,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationResource_"];
+                    "application/json": components["schemas"]["PublicReservationResource"];
                 };
             };
             /** @description Validation Error */
@@ -2197,7 +2062,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationResource_"];
+                    "application/json": components["schemas"]["PublicReservationResource"];
                 };
             };
             /** @description Validation Error */
@@ -2228,7 +2093,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_NoneType_"];
+                    "application/json": unknown;
                 };
             };
             /** @description Validation Error */
@@ -2263,7 +2128,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["Response_PublicReservationResource_"];
+                    "application/json": components["schemas"]["PublicReservationResource"];
                 };
             };
             /** @description Validation Error */

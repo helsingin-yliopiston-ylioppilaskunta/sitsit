@@ -114,7 +114,7 @@ function User(props: userProps) {
     useEffect(() => {
         if (data) {
             setStatus(Status.Success)
-            const user = data.items[0];
+            const user = data;
             setUsername(user.username || "");
         }
     }, [data])
