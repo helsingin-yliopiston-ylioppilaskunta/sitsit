@@ -108,8 +108,8 @@ async def read_users(
     return users
 
 
-@users_router.get("/{user_id}", response_model=PublicUserWithOrg)
-async def get_one_user(session: SessionDep, user_id: int) -> PublicUserWithOrg:
+@users_router.get("/{user_id}", response_model=PublicUserWithOrg | None)
+async def get_one_user(session: SessionDep, user_id: int) -> PublicUserWithOrg | None:
     query = (
         select(DBUser)
         .where(DBUser.id == user_id)
@@ -117,7 +117,7 @@ async def get_one_user(session: SessionDep, user_id: int) -> PublicUserWithOrg:
         .options(selectinload(DBUser.org))
     )
     result = await session.execute(query)
-    user: PublicUserWithOrg = result.scalars().one()
+    user: PublicUserWithOrg = result.scalars().one_or_none()
 
     return user
 
