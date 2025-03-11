@@ -1,0 +1,30 @@
+.UserList {
+    background-color: var(--color-blood-red);
+
+    padding: var(--gap);
+
+    border: var(--border);
+    border-radius: var(--radius);
+
+    display: grid;
+    gap: var(--gap);
+}
+
+/* Move these to idex.css */
+.List {
+    display: grid;
+}
+
+.Row {
+    display: contents;
+    list-style-type: none;
+}
+
+.Row.header {
+    font-weight: bold;
+}
+
+
+.UserList .List {
+    grid-template-columns: repeat(4, auto);
+}

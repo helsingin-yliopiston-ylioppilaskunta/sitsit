@@ -135,7 +135,7 @@ function User(props: userProps) {
 
     return (
         <div className="User">
-            <h3>{props.userId ? "Update" : "Create"} user</h3>
+            <h3>{props.userId ? "Modify" : "New"} user</h3>
             <div>
                 <p>Status: {statusToString(status)}</p>
                 <p>Updating: {updating ? "yes" : "no"}</p>
