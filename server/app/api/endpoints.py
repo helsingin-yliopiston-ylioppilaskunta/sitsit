@@ -89,13 +89,13 @@ from app.models.models import (
 users_router = APIRouter(prefix="/users", tags=["Users"])
 
 
-@users_router.get("/", response_model=Response[PublicUserWithOrg])
+@users_router.get("/", response_model=list[PublicUserWithOrg])
 async def read_users(
     session: SessionDep,
     org: Optional[int] = None,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicUserWithOrg]:
+) -> list[PublicUserWithOrg]:
     query = select(DBUser).where(DBUser.active).options(selectinload(DBUser.org))
 
     if org:
@@ -105,17 +105,11 @@ async def read_users(
     result = await session.execute(query)
     users: list[PublicUserWithOrg] = result.scalars().all()
 
-    more_available = len(users) > limit
-
-    response = Response(status=True, more_available=more_available, items=users)
-
-    return response
+    return users
 
 
-@users_router.get("/{user_id}", response_model=Response[PublicUserWithOrg])
-async def get_one_user(
-    session: SessionDep, user_id: int
-) -> Response[PublicUserWithOrg]:
+@users_router.get("/{user_id}", response_model=PublicUserWithOrg)
+async def get_one_user(session: SessionDep, user_id: int) -> PublicUserWithOrg:
     query = (
         select(DBUser)
         .where(DBUser.id == user_id)
@@ -124,11 +118,11 @@ async def get_one_user(
     )
     result = await session.execute(query)
     user: PublicUserWithOrg = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[user])
-    return response
+
+    return user
 
 
-@users_router.post("/", response_model=Response[PublicUser])
+@users_router.post("/", response_model=PublicUser)
 async def create_user(session: SessionDep, user: CreateUser):
     db_user = DBUser(username=user.username, hash=user.hash, org_id=user.org_id)
     session.add(db_user)
@@ -137,12 +131,11 @@ async def create_user(session: SessionDep, user: CreateUser):
 
     public_user = PublicUser.from_orm(db_user)
 
-    response = Response(status=True, more_available=False, items=[public_user])
-    return response
+    return public_user
 
 
-@users_router.delete("/{user_id}", response_model=Response[None])
-async def delete_user(session: SessionDep, user_id: int) -> Response[None]:
+@users_router.delete("/{user_id}", response_model=None)
+async def delete_user(session: SessionDep, user_id: int) -> None:
     db_user = await session.get(DBUser, user_id)
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -152,13 +145,13 @@ async def delete_user(session: SessionDep, user_id: int) -> Response[None]:
     await session.commit()
     await session.refresh(db_user)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
-@users_router.patch("/{user_id}", response_model=Response[PublicUserWithOrg])
+@users_router.patch("/{user_id}", response_model=PublicUserWithOrg)
 async def update_user(
     session: SessionDep, user_id: int, user: UpdateUser
-) -> Response[PublicUserWithOrg]:
+) -> PublicUserWithOrg:
     # db_user = await session.get(DBUser, user_id)
     query = select(DBUser).where(DBUser.id == user_id).options(selectinload(DBUser.org))
     result = await session.execute(query)
@@ -176,7 +169,7 @@ async def update_user(
 
     public_user = PublicUserWithOrg.from_orm(db_user)
 
-    return Response(status=True, more_available=False, items=[public_user])
+    return public_user
 
 
 ## Organizations ##
@@ -185,26 +178,23 @@ async def update_user(
 orgs_router = APIRouter(prefix="/orgs", tags=["Organizations"])
 
 
-@orgs_router.get("/", response_model=Response[PublicOrg])
+@orgs_router.get("/", response_model=list[PublicOrg])
 async def read_orgs(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicOrg]:
+) -> list[PublicOrg]:
     query = select(DBOrg).where(DBOrg.active).options(selectinload(DBOrg.users))
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
+
     orgs: list[PublicOrgWithUsers] = result.scalars().all()
 
-    more_available = len(orgs) > limit
-
-    response = Response(status=True, more_available=more_available, items=orgs)
-
-    return response
+    return orgs
 
 
-@orgs_router.get("/{org_id}", response_model=Response[PublicOrgWithUsers])
-async def get_one_org(session: SessionDep, org_id: int) -> Response[PublicOrgWithUsers]:
+@orgs_router.get("/{org_id}", response_model=PublicOrgWithUsers)
+async def get_one_org(session: SessionDep, org_id: int) -> PublicOrgWithUsers:
     query = (
         select(DBOrg)
         .where(DBOrg.id == org_id)
@@ -213,11 +203,10 @@ async def get_one_org(session: SessionDep, org_id: int) -> Response[PublicOrgWit
     )
     result = await session.execute(query)
     org: PublicOrgWithUsers = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[org])
-    return response
+    return org
 
 
-@orgs_router.post("/", response_model=Response[PublicOrg])
+@orgs_router.post("/", response_model=PublicOrg)
 async def create_org(session: SessionDep, org: CreateOrg):
     db_org = DBOrg(name=org.name)
     session.add(db_org)
@@ -226,14 +215,11 @@ async def create_org(session: SessionDep, org: CreateOrg):
 
     public_org = PublicOrg.from_orm(db_org)
 
-    response = Response[PublicOrg](
-        status=True, more_available=False, items=[public_org]
-    )
-    return response
+    return public_org
 
 
-@orgs_router.delete("/{org_id}", response_model=Response[None])
-async def delete_org(session: SessionDep, org_id: int) -> Response[None]:
+@orgs_router.delete("/{org_id}", response_model=None)
+async def delete_org(session: SessionDep, org_id: int) -> list[None]:
     db_org = await session.get(DBOrg, org_id)
     if not db_org:
         raise HTTPException(status_code=404, detail="Organization not found")
@@ -243,13 +229,13 @@ async def delete_org(session: SessionDep, org_id: int) -> Response[None]:
     await session.commit()
     await session.refresh(db_org)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
-@orgs_router.patch("/{org_id}", response_model=Response[PublicOrgWithUsers])
+@orgs_router.patch("/{org_id}", response_model=PublicOrgWithUsers)
 async def update_org(
     session: SessionDep, org_id: int, org: UpdateOrg
-) -> Response[PublicOrgWithUsers]:
+) -> PublicOrgWithUsers:
     query = select(DBOrg).where(DBOrg.id == org_id).options(selectinload(DBOrg.users))
     result = await session.execute(query)
     db_org: DBOrg | None = result.scalar_one_or_none()
@@ -266,7 +252,7 @@ async def update_org(
 
     public_org = PublicOrgWithUsers.from_orm(db_org)
 
-    return Response(status=True, more_available=False, items=[public_org])
+    return public_org
 
 
 # Collections
@@ -274,12 +260,12 @@ async def update_org(
 collections_router = APIRouter(prefix="/collections", tags=["Collections"])
 
 
-@collections_router.get("/", response_model=Response[PublicCollectionWithGroups])
+@collections_router.get("/", response_model=list[PublicCollectionWithGroups])
 async def read_collections(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicCollectionWithGroups]:
+) -> list[PublicCollectionWithGroups]:
     query = (
         select(DBCollection)
         .where(DBCollection.active)
@@ -293,23 +279,13 @@ async def read_collections(
     result = await session.execute(query)
     collections: list[PublicCollectionWithGroups] = result.scalars().all()
 
-    print(collections)
-
-    more_available = len(collections) > limit
-
-    response = Response[PublicCollectionWithGroups](
-        status=True, more_available=more_available, items=collections
-    )
-
-    return response
+    return collections
 
 
-@collections_router.get(
-    "/{collection_id}", response_model=Response[PublicCollectionWithGroups]
-)
+@collections_router.get("/{collection_id}", response_model=PublicCollectionWithGroups)
 async def get_one_collection(
     session: SessionDep, collection_id: int
-) -> Response[PublicCollectionWithGroups]:
+) -> PublicCollectionWithGroups:
     query = (
         select(DBCollection)
         .where(DBCollection.id == collection_id)
@@ -322,11 +298,11 @@ async def get_one_collection(
     )
     result = await session.execute(query)
     collection: PublicCollectionWithGroups = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[collection])
-    return response
+
+    return collection
 
 
-@collections_router.post("/", response_model=Response[PublicCollection])
+@collections_router.post("/", response_model=PublicCollection)
 async def create_collection(session: SessionDep, org: CreateCollection):
     db_collection = DBCollection(name=org.name)
     session.add(db_collection)
@@ -335,14 +311,11 @@ async def create_collection(session: SessionDep, org: CreateCollection):
 
     public_collection = PublicCollection.from_orm(db_collection)
 
-    response = Response[PublicCollection](
-        status=True, more_available=False, items=[public_collection]
-    )
-    return response
+    return public_collection
 
 
-@collections_router.delete("/{collection_id}", response_model=Response[None])
-async def delete_collection(session: SessionDep, collection_id: int) -> Response[None]:
+@collections_router.delete("/{collection_id}", response_model=None)
+async def delete_collection(session: SessionDep, collection_id: int) -> None:
     db_collection = await session.get(DBCollection, collection_id)
     if not db_collection:
         raise HTTPException(status_code=404, detail="Collection not found")
@@ -352,13 +325,13 @@ async def delete_collection(session: SessionDep, collection_id: int) -> Response
     await session.commit()
     await session.refresh(db_collection)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
-@collections_router.patch("/{collection_id}", response_model=Response[PublicCollection])
+@collections_router.patch("/{collection_id}", response_model=PublicCollection)
 async def update_collection(
     session: SessionDep, collection_id: int, collection: UpdateCollection
-) -> Response[PublicCollection]:
+) -> PublicCollection:
     query = select(DBCollection).where(DBCollection.id == collection_id)
     result = await session.execute(query)
     db_collection: DBCollection | None = result.scalar_one_or_none()
@@ -375,7 +348,7 @@ async def update_collection(
 
     public_collection = PublicCollection.from_orm(db_collection)
 
-    return Response(status=True, more_available=False, items=[public_collection])
+    return public_collection
 
 
 ## Groups ##
@@ -384,12 +357,12 @@ async def update_collection(
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
 
 
-@groups_router.get("/", response_model=Response[PublicGroupWithCollectionAndResources])
+@groups_router.get("/", response_model=PublicGroupWithCollectionAndResources)
 async def read_groups(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicGroupWithCollectionAndResources]:
+) -> PublicGroupWithCollectionAndResources:
     query = (
         select(DBGroup)
         .where(DBGroup.active)
@@ -402,19 +375,13 @@ async def read_groups(
     result = await session.execute(query)
     groups: list[PublicGroupWithCollection] = result.scalars().all()
 
-    more_available = len(groups) > limit
-
-    response = Response(status=True, more_available=more_available, items=groups)
-
-    return response
+    return groups
 
 
-@groups_router.get(
-    "/{group_id}", response_model=Response[PublicGroupWithCollectionAndResources]
-)
+@groups_router.get("/{group_id}", response_model=PublicGroupWithCollectionAndResources)
 async def get_one_group(
     session: SessionDep, group_id: int
-) -> Response[PublicGroupWithCollectionAndResources]:
+) -> PublicGroupWithCollectionAndResources:
     query = (
         select(DBGroup)
         .where(DBGroup.id == group_id)
@@ -426,11 +393,11 @@ async def get_one_group(
     )
     result = await session.execute(query)
     group: PublicGroup = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[group])
-    return response
+
+    return group
 
 
-@groups_router.post("/", response_model=Response[PublicGroup])
+@groups_router.post("/", response_model=PublicGroup)
 async def create_group(session: SessionDep, group: CreateGroup):
     db_group = DBGroup(name=group.name, collection_id=group.collection_id)
     session.add(db_group)
@@ -439,14 +406,11 @@ async def create_group(session: SessionDep, group: CreateGroup):
 
     public_group = PublicGroup.from_orm(db_group)
 
-    response = Response[PublicGroup](
-        status=True, more_available=False, items=[public_group]
-    )
-    return response
+    return public_group
 
 
-@groups_router.delete("/{group_id}", response_model=Response[None])
-async def delete_group(session: SessionDep, group_id: int) -> Response[None]:
+@groups_router.delete("/{group_id}", response_model=None)
+async def delete_group(session: SessionDep, group_id: int) -> None:
     db_group = await session.get(DBGroup, group_id)
     if not db_group:
         raise HTTPException(status_code=404, detail="Group not found")
@@ -456,13 +420,13 @@ async def delete_group(session: SessionDep, group_id: int) -> Response[None]:
     await session.commit()
     await session.refresh(db_group)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
-@groups_router.patch("/{group_id}", response_model=Response[PublicGroup])
+@groups_router.patch("/{group_id}", response_model=PublicGroup)
 async def update_group(
     session: SessionDep, group_id: int, group: UpdateGroup
-) -> Response[PublicGroup]:
+) -> PublicGroup:
     query = select(DBGroup).where(DBGroup.id == group_id)
     result = await session.execute(query)
     db_group: DBGroup | None = result.scalar_one_or_none()
@@ -479,7 +443,7 @@ async def update_group(
 
     public_group = PublicGroup.from_orm(db_group)
 
-    return Response(status=True, more_available=False, items=[public_group])
+    return public_group
 
 
 ## Resources ##
@@ -488,14 +452,12 @@ async def update_group(
 resources_router = APIRouter(prefix="/resources", tags=["Resources"])
 
 
-@resources_router.get(
-    "/", response_model=Response[PublicResourceWithGroupAndResourceType]
-)
+@resources_router.get("/", response_model=list[PublicResourceWithGroupAndResourceType])
 async def read_resources(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicResourceWithGroupAndResourceType]:
+) -> list[PublicResourceWithGroupAndResourceType]:
     query = (
         select(DBResource)
         .where(DBResource.active)
@@ -507,19 +469,11 @@ async def read_resources(
 
     print(resources)
 
-    more_available = len(resources) > limit
-
-    response = Response[PublicResourceWithGroupAndResourceType](
-        status=True, more_available=more_available, items=resources
-    )
-
-    return response
+    return resources
 
 
-@resources_router.get("/{resource_id}", response_model=Response[PublicResource])
-async def get_one_resource(
-    session: SessionDep, resource_id: int
-) -> Response[PublicResource]:
+@resources_router.get("/{resource_id}", response_model=PublicResource)
+async def get_one_resource(session: SessionDep, resource_id: int) -> PublicResource:
     query = (
         select(DBResource)
         .where(DBResource.id == resource_id)
@@ -528,11 +482,11 @@ async def get_one_resource(
     )
     result = await session.execute(query)
     resource: PublicResource = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[resource])
-    return response
+
+    return resource
 
 
-@resources_router.post("/", response_model=Response[PublicResource])
+@resources_router.post("/", response_model=PublicResource)
 async def create_resource(session: SessionDep, org: CreateResource):
     db_resource = DBResource(
         name=org.name, group_id=org.group_id, resource_type_id=org.resource_type_id
@@ -543,14 +497,11 @@ async def create_resource(session: SessionDep, org: CreateResource):
 
     public_resource = PublicResource.from_orm(db_resource)
 
-    response = Response[PublicResource](
-        status=True, more_available=False, items=[public_resource]
-    )
-    return response
+    return public_resource
 
 
-@resources_router.delete("/{resource_id}", response_model=Response[None])
-async def delete_resource(session: SessionDep, resource_id: int) -> Response[None]:
+@resources_router.delete("/{resource_id}", response_model=None)
+async def delete_resource(session: SessionDep, resource_id: int) -> None:
     db_resource = await session.get(DBResource, resource_id)
     if not db_resource:
         raise HTTPException(status_code=404, detail="Resource not found")
@@ -560,13 +511,13 @@ async def delete_resource(session: SessionDep, resource_id: int) -> Response[Non
     await session.commit()
     await session.refresh(db_resource)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
-@resources_router.patch("/{resource_id}", response_model=Response[PublicResource])
+@resources_router.patch("/{resource_id}", response_model=PublicResource)
 async def update_resource(
     session: SessionDep, resource_id: int, resource: UpdateResource
-) -> Response[PublicResource]:
+) -> PublicResource:
     query = select(DBResource).where(DBResource.id == resource_id)
     result = await session.execute(query)
     db_resource: DBResource | None = result.scalar_one_or_none()
@@ -583,7 +534,7 @@ async def update_resource(
 
     public_resource = PublicResource.from_orm(db_resource)
 
-    return Response(status=True, more_available=False, items=[public_resource])
+    return public_resource
 
 
 ## ResourceTypes ##
@@ -592,30 +543,24 @@ async def update_resource(
 resourcetypes_router = APIRouter(prefix="/resourcetypes", tags=["ResourceTypes"])
 
 
-@resourcetypes_router.get("/", response_model=Response[PublicResourceType])
+@resourcetypes_router.get("/", response_model=list[PublicResourceType])
 async def read_resourceTypes(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicResourceType]:
+) -> list[PublicResourceType]:
     query = select(DBResourceType).where(DBResourceType.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     resourceTypes: list[PublicResourceType] = result.scalars().all()
 
-    more_available = len(resourceTypes) > limit
-
-    response = Response(status=True, more_available=more_available, items=resourceTypes)
-
-    return response
+    return resourceTypes
 
 
-@resourcetypes_router.get(
-    "/{resourceType_id}", response_model=Response[PublicResourceType]
-)
+@resourcetypes_router.get("/{resourceType_id}", response_model=PublicResourceType)
 async def get_one_resourceType(
     session: SessionDep, resourceType_id: int
-) -> Response[PublicResourceType]:
+) -> PublicResourceType:
     query = (
         select(DBResourceType)
         .where(DBResourceType.id == resourceType_id)
@@ -623,11 +568,11 @@ async def get_one_resourceType(
     )
     result = await session.execute(query)
     resourceType: PublicResourceType = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[resourceType])
-    return response
+
+    return resourceType
 
 
-@resourcetypes_router.post("/", response_model=Response[PublicResourceType])
+@resourcetypes_router.post("/", response_model=PublicResourceType)
 async def create_resourceType(session: SessionDep, resourcetype: CreateResourceType):
     db_resourceType = DBResourceType(name=resourcetype.name)
     session.add(db_resourceType)
@@ -636,14 +581,11 @@ async def create_resourceType(session: SessionDep, resourcetype: CreateResourceT
 
     public_resourceType = PublicResourceType.from_orm(db_resourceType)
 
-    response = Response(status=True, more_available=False, items=[public_resourceType])
-    return response
+    return public_resourceType
 
 
-@resourcetypes_router.delete("/{resourceType_id}", response_model=Response[None])
-async def delete_resourceType(
-    session: SessionDep, resourceType_id: int
-) -> Response[None]:
+@resourcetypes_router.delete("/{resourceType_id}", response_model=None)
+async def delete_resourceType(session: SessionDep, resourceType_id: int) -> None:
     db_resourceType = await session.get(DBResourceType, resourceType_id)
     if not db_resourceType:
         raise HTTPException(status_code=404, detail="ResourceType not found")
@@ -653,15 +595,13 @@ async def delete_resourceType(
     await session.commit()
     await session.refresh(db_resourceType)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
-@resourcetypes_router.patch(
-    "/{resourceType_id}", response_model=Response[PublicResourceType]
-)
+@resourcetypes_router.patch("/{resourceType_id}", response_model=PublicResourceType)
 async def update_resourceType(
     session: SessionDep, resourceType_id: int, resourceType: UpdateResourceType
-) -> Response[PublicResourceType]:
+) -> PublicResourceType:
     query = select(DBResourceType).where(DBResourceType.id == resourceType_id)
     result = await session.execute(query)
     db_resourceType: DBResourceType | None = result.scalar_one_or_none()
@@ -678,7 +618,7 @@ async def update_resourceType(
 
     public_resourceType = PublicResourceType.from_orm(db_resourceType)
 
-    return Response(status=True, more_available=False, items=[public_resourceType])
+    return public_resourceType
 
 
 ## Reservations ##
@@ -687,30 +627,24 @@ async def update_resourceType(
 reservations_router = APIRouter(prefix="/reservations", tags=["Reservations"])
 
 
-@reservations_router.get("/", response_model=Response[PublicReservation])
+@reservations_router.get("/", response_model=list[PublicReservation])
 async def read_reservations(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicReservation]:
+) -> list[PublicReservation]:
     query = select(DBReservation).where(DBReservation.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     reservations: list[PublicReservation] = result.scalars().all()
 
-    more_available = len(reservations) > limit
-
-    response = Response(status=True, more_available=more_available, items=reservations)
-
-    return response
+    return reservations
 
 
-@reservations_router.get(
-    "/{reservation_id}", response_model=Response[PublicReservation]
-)
+@reservations_router.get("/{reservation_id}", response_model=PublicReservation)
 async def get_one_reservation(
     session: SessionDep, reservation_id: int
-) -> Response[PublicReservation]:
+) -> PublicReservation:
     query = (
         select(DBReservation)
         .where(DBReservation.id == reservation_id)
@@ -718,11 +652,11 @@ async def get_one_reservation(
     )
     result = await session.execute(query)
     reservation: PublicReservation = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[reservation])
-    return response
+
+    return reservation
 
 
-@reservations_router.post("/", response_model=Response[PublicReservation])
+@reservations_router.post("/", response_model=PublicReservation)
 async def create_reservation(session: SessionDep, reservation: CreateReservation):
     db_reservation = DBReservation(
         name=reservation.name,
@@ -736,14 +670,11 @@ async def create_reservation(session: SessionDep, reservation: CreateReservation
 
     public_reservation = PublicReservation.from_orm(db_reservation)
 
-    response = Response(status=True, more_available=False, items=[public_reservation])
-    return response
+    return public_reservation
 
 
-@reservations_router.delete("/{reservation_id}", response_model=Response[None])
-async def delete_reservation(
-    session: SessionDep, reservation_id: int
-) -> Response[None]:
+@reservations_router.delete("/{reservation_id}", response_model=None)
+async def delete_reservation(session: SessionDep, reservation_id: int) -> None:
     db_reservation = await session.get(DBReservation, reservation_id)
     if not db_reservation:
         raise HTTPException(status_code=404, detail="Reservation not found")
@@ -753,15 +684,13 @@ async def delete_reservation(
     await session.commit()
     await session.refresh(db_reservation)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
-@reservations_router.patch(
-    "/{reservation_id}", response_model=Response[PublicReservation]
-)
+@reservations_router.patch("/{reservation_id}", response_model=PublicReservation)
 async def update_reservation(
     session: SessionDep, reservation_id: int, reservation: UpdateReservation
-) -> Response[PublicReservation]:
+) -> PublicReservation:
     query = select(DBReservation).where(DBReservation.id == reservation_id)
     result = await session.execute(query)
     db_reservation: DBReservation | None = result.scalar_one_or_none()
@@ -778,7 +707,7 @@ async def update_reservation(
 
     public_reservation = PublicReservation.from_orm(db_reservation)
 
-    return Response(status=True, more_available=False, items=[public_reservation])
+    return public_reservation
 
 
 ## ReservationTimes ##
@@ -789,32 +718,26 @@ reservationtimes_router = APIRouter(
 )
 
 
-@reservationtimes_router.get("/", response_model=Response[PublicReservationTime])
+@reservationtimes_router.get("/", response_model=list[PublicReservationTime])
 async def read_reservationTimes(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicReservationTime]:
+) -> list[PublicReservationTime]:
     query = select(DBReservationTime).where(DBReservationTime.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     reservationTimes: list[PublicReservationTime] = result.scalars().all()
 
-    more_available = len(reservationTimes) > limit
-
-    response = Response(
-        status=True, more_available=more_available, items=reservationTimes
-    )
-
-    return response
+    return reservationTimes
 
 
 @reservationtimes_router.get(
-    "/{reservationTime_id}", response_model=Response[PublicReservationTime]
+    "/{reservationTime_id}", response_model=PublicReservationTime
 )
 async def get_one_reservationTime(
     session: SessionDep, reservationTime_id: int
-) -> Response[PublicReservationTime]:
+) -> PublicReservationTime:
     query = (
         select(DBReservationTime)
         .where(DBReservationTime.id == reservationTime_id)
@@ -822,11 +745,11 @@ async def get_one_reservationTime(
     )
     result = await session.execute(query)
     reservationTime: PublicReservationTime = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[reservationTime])
-    return response
+
+    return reservationTime
 
 
-@reservationtimes_router.post("/", response_model=Response[PublicReservationTime])
+@reservationtimes_router.post("/", response_model=PublicReservationTime)
 async def create_reservationTime(
     session: SessionDep, reservationTime: CreateReservationTime
 ):
@@ -840,16 +763,11 @@ async def create_reservationTime(
 
     public_reservationTime = PublicReservationTime.from_orm(db_reservationTime)
 
-    response = Response(
-        status=True, more_available=False, items=[public_reservationTime]
-    )
-    return response
+    return public_reservationTime
 
 
-@reservationtimes_router.delete("/{reservationTime_id}", response_model=Response[None])
-async def delete_reservationTime(
-    session: SessionDep, reservationTime_id: int
-) -> Response[None]:
+@reservationtimes_router.delete("/{reservationTime_id}", response_model=None)
+async def delete_reservationTime(session: SessionDep, reservationTime_id: int) -> None:
     db_reservationTime = await session.get(DBReservationTime, reservationTime_id)
     if not db_reservationTime:
         raise HTTPException(status_code=404, detail="ReservationTime not found")
@@ -859,15 +777,15 @@ async def delete_reservationTime(
     await session.commit()
     await session.refresh(db_reservationTime)
 
-    return Response(status=True, more_available=False, items=[])
+    return []
 
 
 @reservationtimes_router.patch(
-    "/{reservationTime_id}", response_model=Response[PublicReservationTime]
+    "/{reservationTime_id}", response_model=PublicReservationTime
 )
 async def update_reservationTime(
     session: SessionDep, reservationTime_id: int, reservationTime: UpdateReservationTime
-) -> Response[PublicReservationTime]:
+) -> PublicReservationTime:
     query = select(DBReservationTime).where(DBReservationTime.id == reservationTime_id)
     result = await session.execute(query)
     db_reservationTime: DBReservationTime | None = result.scalar_one_or_none()
@@ -884,7 +802,7 @@ async def update_reservationTime(
 
     public_reservationTime = PublicReservationTime.from_orm(db_reservationTime)
 
-    return Response(status=True, more_available=False, items=[public_reservationTime])
+    return public_reservationTime
 
 
 ## ReservationResources ##
@@ -895,34 +813,26 @@ reservationresources_router = APIRouter(
 )
 
 
-@reservationresources_router.get(
-    "/", response_model=Response[PublicReservationResource]
-)
+@reservationresources_router.get("/", response_model=list[PublicReservationResource])
 async def read_reservationResources(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> Response[PublicReservationResource]:
+) -> list[PublicReservationResource]:
     query = select(DBReservationResource).where(DBReservationResource.active)
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     reservationResources: list[PublicReservationResource] = result.scalars().all()
 
-    more_available = len(reservationResources) > limit
-
-    response = Response(
-        status=True, more_available=more_available, items=reservationResources
-    )
-
-    return response
+    return reservationResources
 
 
 @reservationresources_router.get(
-    "/{reservationResource_id}", response_model=Response[PublicReservationResource]
+    "/{reservationResource_id}", response_model=PublicReservationResource
 )
 async def get_one_reservationResource(
     session: SessionDep, reservationResource_id: int
-) -> Response[PublicReservationResource]:
+) -> PublicReservationResource:
     query = (
         select(DBReservationResource)
         .where(DBReservationResource.id == reservationResource_id)
@@ -930,13 +840,11 @@ async def get_one_reservationResource(
     )
     result = await session.execute(query)
     reservationResource: PublicReservationResource = result.scalars().one()
-    response = Response(status=True, more_available=False, items=[reservationResource])
-    return response
+
+    return reservationResource
 
 
-@reservationresources_router.post(
-    "/", response_model=Response[PublicReservationResource]
-)
+@reservationresources_router.post("/", response_model=PublicReservationResource)
 async def create_reservationResource(
     session: SessionDep, reservationResource: CreateReservationResource
 ):
@@ -952,18 +860,13 @@ async def create_reservationResource(
         db_reservationResource
     )
 
-    response = Response(
-        status=True, more_available=False, items=[public_reservationResource]
-    )
-    return response
+    return public_reservationResource
 
 
-@reservationresources_router.delete(
-    "/{reservationResource_id}", response_model=Response[None]
-)
+@reservationresources_router.delete("/{reservationResource_id}", response_model=None)
 async def delete_reservationResource(
     session: SessionDep, reservationResource_id: int
-) -> Response[None]:
+) -> None:
     db_reservationResource = await session.get(
         DBReservationResource, reservationResource_id
     )
@@ -975,17 +878,17 @@ async def delete_reservationResource(
     await session.commit()
     await session.refresh(db_reservationResource)
 
-    return Response(status=True, more_available=False, items=[])
+    return None
 
 
 @reservationresources_router.patch(
-    "/{reservationResource_id}", response_model=Response[PublicReservationResource]
+    "/{reservationResource_id}", response_model=PublicReservationResource
 )
 async def update_reservationResource(
     session: SessionDep,
     reservationResource_id: int,
     reservationResource: UpdateReservationResource,
-) -> Response[PublicReservationResource]:
+) -> PublicReservationResource:
     query = select(DBReservationResource).where(
         DBReservationResource.id == reservationResource_id
     )
@@ -1006,6 +909,4 @@ async def update_reservationResource(
         db_reservationResource
     )
 
-    return Response(
-        status=True, more_available=False, items=[public_reservationResource]
-    )
+    return public_reservationResource
