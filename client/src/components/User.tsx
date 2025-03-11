@@ -15,13 +15,13 @@ function statusToString(status: Status) {
     let str = ""
     switch (status) {
         case Status.Loading:
-            str = "Loading";
+            str = "loading";
             break;
         case Status.Success:
-            str = "Ok"
+            str = "ok"
             break;
         case Status.Error:
-            str = "Error"
+            str = "error"
             break;
     }
 
@@ -38,6 +38,7 @@ function User(props: userProps) {
     const [modified, setModified] = useState(false);
 
     const [username, setUsername] = useState("");
+    const [organization, setOrganization] = useState("");
 
     const { data, error: getError, isLoading } = (props.userId) ? api.useQuery(
         "get", "/users/{user_id}", {
@@ -55,10 +56,11 @@ function User(props: userProps) {
             },
             onSuccess: () => {
                 setModified(false);
+                setStatus(Status.Success)
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
-                setErrorMsg(error.toString())
+                setErrorMsg(`${error.detail}`)
             }
         }
         );
@@ -68,10 +70,11 @@ function User(props: userProps) {
             "post", "/users/", {
             onSuccess: () => {
                 setModified(false);
+                setStatus(Status.Success)
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
-                setErrorMsg(error.toString())
+                setErrorMsg(`${error.detail}`)
             }
         }
         );
@@ -112,10 +115,17 @@ function User(props: userProps) {
     }, [creating])
 
     useEffect(() => {
+        if (updating) {
+            setStatus(Status.Loading);
+        }
+    }, [updating])
+
+    useEffect(() => {
         if (data) {
             setStatus(Status.Success)
             const user = data;
             setUsername(user.username || "");
+            setOrganization(user.org ? user.org.name : "");
         }
     }, [data])
 
@@ -125,42 +135,34 @@ function User(props: userProps) {
         }
     }, [getError])
 
-    useEffect(() => {
-        console.log(typeof errorMsg, errorMsg);
-    }, [errorMsg])
-
-    useEffect(() => {
-        console.log("Status:", status)
-    }, [status])
-
     return (
-        <div className="User">
+        <div className={`User status-${statusToString(status)}`}>
             <h3>{props.userId ? "Modify" : "New"} user</h3>
-            <div>
-                <p>Status: {statusToString(status)}</p>
-                <p>Updating: {updating ? "yes" : "no"}</p>
-                <p>Modified: {modified ? "modified" : "changes saved"}</p>
-                <p>Error: {errorMsg}</p>
-            </div>
             <form onSubmit={(e) => {
                 e.preventDefault();
                 handleUpdateUser();
             }}>
                 <div className="row">
-                    <label>Id</label>
-                    <input type="number" disabled={true} value={props.userId} />
+                    <input type="hidden" disabled={true} value={props.userId} />
                 </div>
-                <div>
+                <div className="row">
                     <label>Username</label>
                     <input type="text" value={username} onChange={(e) => {
                         setUsername(e.target.value);
                         setModified(true);
                     }} />
                 </div>
-                <div>
-                    <input type="submit" value="Tallenna" />
+                <div className="row">
+                    <label>Organization</label>
+                    <input type="text" disabled={true} value={organization} />
+                </div>
+                <div className="row">
+                    <input type="submit" disabled={!modified} value="Tallenna" />
                 </div>
             </form>
+            <div className="error">
+                {errorMsg}
+            </div>
         </div>
     )
 }

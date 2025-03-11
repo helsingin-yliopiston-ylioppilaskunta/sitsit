@@ -9,3 +9,15 @@
     display: grid;
     gap: var(--gap);
 }
+
+.User form {
+    display: grid;
+    grid-template-columns: auto;
+
+    gap: var(--gap-l);
+}
+
+.row label,
+.row input {
+    display: block;
+}

@@ -57,3 +57,15 @@ textarea {
 
     padding: var(--gap-s) var(--gap) var(--gap-s) var(--gap);
 }
+
+button:disabled,
+input:disabled {
+    color: var(--color-border);
+}
+
+button,
+submit,
+input[type="button"],
+input[type="submit"] {
+    text-align: center;
+}
