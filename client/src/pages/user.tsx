@@ -3,15 +3,11 @@ import User from '../components/User';
 
 export async function clientLoader({ params }: Route.LoaderArgs) {
     return {
-        title: "Users",
+        title: "Update a user",
         userId: params.userId,
     };
 }
 
 export default function UserPage({ loaderData }) {
-    if (loaderData.userId) {
-        return <User userId={loaderData.userId} />
-    } else {
-        return <User />
-    }
+    return <User userId={loaderData.userId} />
 }
