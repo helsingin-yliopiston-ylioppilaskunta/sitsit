@@ -6,29 +6,7 @@ import './User.css'
 import { components } from './../schema';
 
 import { Link, useNavigate } from "react-router";
-
-enum Status {
-    Loading,
-    Success,
-    Error
-}
-
-function statusToString(status: Status) {
-    let str = ""
-    switch (status) {
-        case Status.Loading:
-            str = "loading";
-            break;
-        case Status.Success:
-            str = "ok"
-            break;
-        case Status.Error:
-            str = "error"
-            break;
-    }
-
-    return str
-}
+import Status from "./../status";
 
 interface userProps {
     userId?: number;
@@ -165,7 +143,7 @@ function User(props: userProps) {
     }, [combinedError]);
 
     return (
-        <div className={`User status-${statusToString(status)}`}>
+        <div className={`User status-${status}`}>
             <h3>{props.userId ? "Modify" : "New"} user</h3>
             <Link to="/users/">Back</Link>
             <form onSubmit={(e) => {
