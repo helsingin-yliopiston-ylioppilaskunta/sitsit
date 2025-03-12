@@ -8,11 +8,11 @@ import { components } from './../schema';
 import { Link, useNavigate } from "react-router";
 import Status from "./../status";
 
-interface userProps {
+interface UserProps {
     userId?: number;
 }
 
-function User(props: userProps) {
+function User(props: UserProps) {
     const [status, setStatus] = useState(Status.Loading);
     const [errorMsg, setErrorMsg] = useState("");
     const [modified, setModified] = useState(false);
@@ -24,13 +24,13 @@ function User(props: userProps) {
 
     const navigate = useNavigate();
 
-    const { data, error: getError, isLoading } = (props.userId) ? api.useQuery(
+    const { data, error: getError, isLoading } = api.useQuery(
         "get", "/users/{user_id}", {
         params: {
             path: { user_id: props.userId || -1 }
         },
-    }
-    ) : { data: undefined, error: undefined, isLoading: false };
+        enabled: !!props.userId
+    });
 
     const { data: orgResponse, error: orgError, isLoading: orgLoading } = api.useQuery(
         "get", "/orgs/"
@@ -118,10 +118,13 @@ function User(props: userProps) {
     useEffect(() => {
         if (isAnyLoading) {
             setStatus(Status.Loading);
+        } else if (combinedError) {
+            setStatus(Status.Error);
+            setErrorMsg(combinedError.toString());
         } else if (data) {
             setStatus(Status.Success);
         }
-    }, [isAnyLoading, data]);
+    }, [isAnyLoading, combinedError, data]);
 
     useEffect(() => {
         if (data) {
@@ -135,12 +138,6 @@ function User(props: userProps) {
             setOrgs(orgResponse);
         }
     }, [orgResponse]);
-
-    useEffect(() => {
-        if (combinedError) {
-            setErrorMsg(combinedError.toString());
-        }
-    }, [combinedError]);
 
     return (
         <div className={`User status-${status}`}>
