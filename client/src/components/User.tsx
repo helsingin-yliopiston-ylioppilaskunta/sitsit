@@ -141,8 +141,8 @@ function User(props: UserProps) {
 
     return (
         <div className={`User status-${status}`}>
-            <h3>{props.userId ? "Modify" : "New"} user</h3>
-            <Link to="/users/">Back</Link>
+            <h3>{props.userId ? "Muokkaa käyttäjää" : "Uusi käyttäjä"}</h3>
+            <Link to="/users/">Palaa</Link>
             <form onSubmit={(e) => {
                 e.preventDefault();
                 handleUpdateUser();
@@ -151,14 +151,14 @@ function User(props: UserProps) {
                     <input type="hidden" disabled={true} value={props.userId} />
                 </div>
                 <div className="row">
-                    <label>Username</label>
+                    <label>Käyttäjänimi</label>
                     <input type="text" value={username} onChange={(e) => {
                         setUsername(e.target.value);
                         setModified(true);
                     }} />
                 </div>
                 <div className="row">
-                    <label>Organization</label>
+                    <label>Organisaatio</label>
                     <select name="organization" id="organization"
                         value={organization}
                         onChange={(e) => {

@@ -37,10 +37,9 @@ interface userRowProps {
 function UserRow(props: userRowProps) {
     return (
         <ul className="UserRow Row" key={props.data.id}>
-            <li>{props.data.id}</li>
             <li>{props.data.username}</li>
             <li>{props.data.org ? props.data.org.name : "unset"}</li>
-            <li><Link to={`/users/${props.data.id}`}>edit</Link></li>
+            <li><Link to={`/users/${props.data.id}`}>muokkaa</Link></li>
         </ul >
     )
 }
@@ -77,18 +76,17 @@ function UserList() {
 
     return (
         <div className={`UserList status-${statusToString(status)}`}>
-            <h3>Users</h3>
+            <h3>Käyttäjät</h3>
             <div className="List">
-                <ul className="Row header">
-                    <li>#</li>
-                    <li>username</li>
-                    <li>organization</li>
-                    <li>edit</li>
+                <ul className="Row header" key="header">
+                    <li>Käyttäjä</li>
+                    <li>Organisaatio</li>
+                    <li>Muokkaa</li>
                 </ul>
-                {users.sort((a, b) => a.id - b.id).map((user) => (<UserRow data={user} />))}
+                {users.sort((a, b) => a.id - b.id).map((user) => (<UserRow data={user} key={user.id} />))}
             </div>
             <div>
-                <Link className="button" to="/users/new">Create new user</Link>
+                <Link className="button" to="/users/new">Luo uusi käyttäjä</Link>
             </div>
             <div className="error">
                 {errorMsg}

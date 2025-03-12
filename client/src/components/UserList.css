@@ -26,7 +26,7 @@
 
 
 .UserList .List {
-    grid-template-columns: repeat(4, auto);
+    grid-template-columns: repeat(3, auto);
 }
 
 .button {
