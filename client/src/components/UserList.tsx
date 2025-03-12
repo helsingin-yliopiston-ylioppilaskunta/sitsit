@@ -6,35 +6,13 @@ import { Link } from "react-router";
 import './UserList.css'
 
 import { components } from './../schema';
+import Status from "./../status";
 
-enum Status {
-    Loading,
-    Success,
-    Error
-}
-
-function statusToString(status: Status) {
-    let str = ""
-    switch (status) {
-        case Status.Loading:
-            str = "loading";
-            break;
-        case Status.Success:
-            str = "ok"
-            break;
-        case Status.Error:
-            str = "error"
-            break;
-    }
-
-    return str
-}
-
-interface userRowProps {
+interface UserRowProps {
     data: components["schemas"]["PublicUserWithOrg"]
 }
 
-function UserRow(props: userRowProps) {
+function UserRow(props: UserRowProps) {
     return (
         <ul className="UserRow Row" key={props.data.id}>
             <li>{props.data.username}</li>
@@ -75,7 +53,7 @@ function UserList() {
     }, [getError])
 
     return (
-        <div className={`UserList status-${statusToString(status)}`}>
+        <div className={`UserList status-${status}`}>
             <h3>Käyttäjät</h3>
             <div className="List">
                 <ul className="Row header" key="header">
