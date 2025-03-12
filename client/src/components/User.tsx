@@ -133,44 +133,22 @@ function User(props: userProps) {
         deleteUser({ params: { path: { user_id: props.userId || -1 } } })
     }
 
-    useEffect(() => {
-        if (isLoading) {
-            setStatus(Status.Loading);
-        }
+    const isAnyLoading = isLoading || orgLoading || creating || updating || deleting;
 
-    }, [isLoading])
+    const combinedError = getError || orgError;
 
     useEffect(() => {
-        if (orgLoading) {
+        if (isAnyLoading) {
             setStatus(Status.Loading);
+        } else if (data) {
+            setStatus(Status.Success);
         }
-    }, [orgLoading])
-
-    useEffect(() => {
-        if (creating) {
-            setStatus(Status.Loading);
-        }
-
-    }, [creating])
-
-    useEffect(() => {
-        if (updating) {
-            setStatus(Status.Loading);
-        }
-    }, [updating])
-
-    useEffect(() => {
-        if (deleting) {
-            setStatus(Status.Loading);
-        }
-    }, [deleting])
+    }, [isAnyLoading, data]);
 
     useEffect(() => {
         if (data) {
-            setStatus(Status.Success)
-            const user = data;
-            setUsername(user.username || "");
-            setOrganization(user.org ? user.org.id : 1);
+            setUsername(data.username || "")
+            setOrganization(data.org ? data.org.id : 1);
         }
     }, [data])
 
@@ -178,19 +156,13 @@ function User(props: userProps) {
         if (orgResponse) {
             setOrgs(orgResponse);
         }
-    }, [orgResponse])
+    }, [orgResponse]);
 
     useEffect(() => {
-        if (getError) {
-            setErrorMsg(getError.toString())
+        if (combinedError) {
+            setErrorMsg(combinedError.toString());
         }
-    }, [getError])
-
-    useEffect(() => {
-        if (orgError) {
-            setErrorMsg(orgError.toString())
-        }
-    }, [orgError])
+    }, [combinedError]);
 
     return (
         <div className={`User status-${statusToString(status)}`}>
