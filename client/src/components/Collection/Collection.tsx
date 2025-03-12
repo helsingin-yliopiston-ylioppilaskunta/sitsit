@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
-import api from './../api';
+import api from '../../api';
 
-import './Org.css'
+import './Collection.css'
 
-import { components } from './../schema';
+import { components } from '../../schema';
 
 import { Link, useNavigate } from "react-router";
-import Status from "./../status";
+import Status from "../../status";
 
-interface OrgProps {
-    orgId?: number;
+interface CollectionProps {
+    collectionId?: number;
 }
 
-function Org(props: OrgProps) {
+function Collection(props: CollectionProps) {
     const [status, setStatus] = useState(Status.Loading);
     const [errorMsg, setErrorMsg] = useState("");
     const [modified, setModified] = useState(false);
@@ -21,19 +21,19 @@ function Org(props: OrgProps) {
 
     const navigate = useNavigate();
 
-    const { data, error: getError, isLoading } = api.useQuery(
-        "get", "/orgs/{org_id}", {
-        params: {
-            path: { org_id: props.orgId || -1 }
-        },
-        enabled: !!props.orgId
-    });
-
-    const { mutate: updateOrg, isPending: updating } =
-        api.useMutation(
-            "patch", "/orgs/{org_id}", {
+    const { data, error: getError, isLoading } = props.collectionId
+        ? api.useQuery(
+            "get", "/collections/{collection_id}", {
             params: {
-                path: { org_id: props.orgId }
+                path: { collection_id: props.collectionId || -1 }
+            },
+        }) : { data: undefined, error: undefined, isLoading: false };
+
+    const { mutate: updateCollection, isPending: updating } =
+        api.useMutation(
+            "patch", "/collections/{collection_id}", {
+            params: {
+                path: { collection_id: props.collectionId }
             },
             onSuccess: () => {
                 setModified(false);
@@ -46,13 +46,13 @@ function Org(props: OrgProps) {
         }
         );
 
-    const { mutate: createOrg, isPending: creating } =
+    const { mutate: createCollection, isPending: creating } =
         api.useMutation(
-            "post", "/orgs/", {
+            "post", "/collections/", {
             onSuccess: () => {
                 setModified(false);
                 setStatus(Status.Success);
-                navigate("/orgs/");
+                navigate("/collections/");
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
@@ -61,16 +61,16 @@ function Org(props: OrgProps) {
         }
         );
 
-    const { mutate: deleteOrg, isPending: deleting } =
+    const { mutate: deleteCollection, isPending: deleting } =
         api.useMutation(
-            "delete", "/orgs/{org_id}", {
+            "delete", "/collections/{collection_id}", {
             params: {
-                path: { org_id: props.orgId }
+                path: { collection_id: props.collectionId }
             },
             onSuccess: () => {
                 setModified(false);
                 setStatus(Status.Success);
-                navigate("/orgs/");
+                navigate("/collections/");
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
@@ -79,27 +79,27 @@ function Org(props: OrgProps) {
         }
         );
 
-    const handleUpdateOrg = () => {
-        const org = {
+    const handleUpdateCollection = () => {
+        const collection = {
             name: name,
         };
 
-        if (props.orgId) {
-            updateOrg({
+        if (props.collectionId) {
+            updateCollection({
                 params: {
-                    path: { org_id: props.orgId || -1 }
+                    path: { collection_id: props.collectionId || -1 }
                 },
-                body: org
+                body: collection
             });
         } else {
-            createOrg({
-                body: org
+            createCollection({
+                body: collection
             })
         }
     };
 
     const removeOrg = () => {
-        deleteOrg({ params: { path: { org_id: props.orgId || -1 } } })
+        deleteCollection({ params: { path: { collection_id: props.collectionId || -1 } } })
     }
 
     const isAnyLoading = isLoading || creating || updating || deleting;
@@ -124,15 +124,15 @@ function Org(props: OrgProps) {
     }, [data])
 
     return (
-        <div className={`Org status-${status}`}>
-            <h3>{props.orgId ? "Muokkaa organisaatiota" : "Uusi organisaatio"}</h3>
-            <Link to="/orgs/">Palaa</Link>
+        <div className={`Collection status-${status}`}>
+            <h3>{props.collectionId ? "Muokkaa kokoelmaa" : "Uusi kokoelma"}</h3>
+            <Link to="/collections/">Palaa</Link>
             <form onSubmit={(e) => {
                 e.preventDefault();
-                handleUpdateOrg();
+                handleUpdateCollection();
             }}>
                 <div className="row">
-                    <input type="hidden" disabled={true} value={props.orgId} />
+                    <input type="hidden" disabled={true} value={props.collectionId} />
                 </div>
                 <div className="row">
                     <label>Nimi</label>
@@ -143,7 +143,7 @@ function Org(props: OrgProps) {
                 </div>
                 <div className="row">
                     <input type="submit" disabled={!modified} value="Tallenna" />
-                    <input type="button" value="Poista organisaatio"
+                    <input type="button" value="Poista kokoelma"
                         onClick={(e) => {
                             e.preventDefault();
                             removeOrg();
@@ -158,4 +158,4 @@ function Org(props: OrgProps) {
     )
 }
 
-export default Org
+export default Collection

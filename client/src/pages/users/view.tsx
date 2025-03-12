@@ -1,5 +1,5 @@
 import type { Route } from './+types/users';
-import User from '../components/User';
+import User from '../../components/User/User';
 
 export async function clientLoader({ params }: Route.LoaderArgs) {
     return {

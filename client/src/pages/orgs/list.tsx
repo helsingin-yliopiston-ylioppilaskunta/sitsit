@@ -1,4 +1,4 @@
-import OrgList from '../components/OrgList';
+import OrgList from '../../components/OrgList/OrgList';
 
 export async function clientLoader() {
     return {
@@ -6,6 +6,6 @@ export async function clientLoader() {
     };
 }
 
-export default function UserListPage({ loaderData }) {
+export default function OrgListPage({ loaderData }) {
     return <OrgList />
 }

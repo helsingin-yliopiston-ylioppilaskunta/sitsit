@@ -1,35 +1,34 @@
 import { useState, useEffect } from 'react';
-import api from './../api';
+import api from '../../api';
 
 import { Link } from "react-router";
 
-import './UserList.css'
+import './OrgList.css'
 
-import { components } from './../schema';
-import Status from "./../status";
+import { components } from '../../schema';
+import Status from "../../status";
 
-interface UserRowProps {
-    data: components["schemas"]["PublicUserWithOrg"]
+interface OrgRowProps {
+    data: components["schemas"]["PublicOrg"]
 }
 
-function UserRow(props: UserRowProps) {
+function OrgRow(props: OrgRowProps) {
     return (
-        <ul className="UserRow Row" key={props.data.id}>
-            <li>{props.data.username}</li>
-            <li>{props.data.org ? props.data.org.name : "unset"}</li>
-            <li><Link to={`/users/${props.data.id}`}>muokkaa</Link></li>
+        <ul className="OrgRow Row" key={props.data.id}>
+            <li>{props.data.name}</li>
+            <li><Link to={`/orgs/${props.data.id}`}>muokkaa</Link></li>
         </ul >
     )
 }
 
-function UserList() {
+function OrgList() {
     const [status, setStatus] = useState(Status.Loading);
     const [errorMsg, setErrorMsg] = useState("");
 
-    const [users, setUsers] = useState<components["schemas"]["PublicUserWithOrg"][]>([]);
+    const [orgs, setOrgs] = useState<components["schemas"]["PublicOrg"][]>([]);
 
     const { data, error: getError, isLoading } = api.useQuery(
-        "get", "/users/"
+        "get", "/orgs/"
     );
 
     useEffect(() => {
@@ -42,7 +41,7 @@ function UserList() {
     useEffect(() => {
         if (data) {
             setStatus(Status.Success)
-            setUsers(data);
+            setOrgs(data);
         }
     }, [data])
 
@@ -53,18 +52,17 @@ function UserList() {
     }, [getError])
 
     return (
-        <div className={`UserList status-${status}`}>
-            <h3>Käyttäjät</h3>
+        <div className={`OrgList status-${status}`}>
+            <h3>Organisaatiot</h3>
             <div className="List">
                 <ul className="Row header" key="header">
-                    <li>Käyttäjä</li>
                     <li>Organisaatio</li>
                     <li>Muokkaa</li>
                 </ul>
-                {users.sort((a, b) => a.id - b.id).map((user) => (<UserRow data={user} key={user.id} />))}
+                {orgs.sort((a, b) => a.id - b.id).map((org) => (<OrgRow data={org} key={org.id} />))}
             </div>
             <div>
-                <Link className="button" to="/users/new">Luo uusi käyttäjä</Link>
+                <Link className="button" to="/orgs/new">Luo uusi organisaatio</Link>
             </div>
             <div className="error">
                 {errorMsg}
@@ -73,4 +71,4 @@ function UserList() {
     )
 }
 
-export default UserList
+export default OrgList

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import api from './../api';
+import api from '../../api';
 
 import './User.css'
 
-import { components } from './../schema';
+import { components } from '../../schema';
 
 import { Link, useNavigate } from "react-router";
-import Status from "./../status";
+import Status from "../../status";
 
 interface UserProps {
     userId?: number;
