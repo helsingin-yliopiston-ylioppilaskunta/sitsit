@@ -5,6 +5,8 @@ import './User.css'
 
 import { components } from './../schema';
 
+import { Link, useNavigate } from "react-router";
+
 enum Status {
     Loading,
     Success,
@@ -38,9 +40,11 @@ function User(props: userProps) {
     const [modified, setModified] = useState(false);
 
     const [username, setUsername] = useState("");
-    const [organization, setOrganization] = useState(0);
+    const [organization, setOrganization] = useState(1);
 
-    const [orgs, setOrgs] = useState([]);
+    const [orgs, setOrgs] = useState<components["schemas"]["PublicOrg"][]>([]);
+
+    const navigate = useNavigate();
 
     const { data, error: getError, isLoading } = (props.userId) ? api.useQuery(
         "get", "/users/{user_id}", {
@@ -76,7 +80,26 @@ function User(props: userProps) {
             "post", "/users/", {
             onSuccess: () => {
                 setModified(false);
-                setStatus(Status.Success)
+                setStatus(Status.Success);
+                navigate("/users/");
+            },
+            onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
+                setStatus(Status.Error)
+                setErrorMsg(`${error.detail}`)
+            }
+        }
+        );
+
+    const { mutate: deleteUser, isPending: deleting } =
+        api.useMutation(
+            "delete", "/users/{user_id}", {
+            params: {
+                path: { user_id: props.userId }
+            },
+            onSuccess: () => {
+                setModified(false);
+                setStatus(Status.Success);
+                navigate("/users/");
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
@@ -106,12 +129,22 @@ function User(props: userProps) {
         }
     };
 
+    const removeUser = () => {
+        deleteUser({ params: { path: { user_id: props.userId || -1 } } })
+    }
+
     useEffect(() => {
         if (isLoading) {
             setStatus(Status.Loading);
         }
 
     }, [isLoading])
+
+    useEffect(() => {
+        if (orgLoading) {
+            setStatus(Status.Loading);
+        }
+    }, [orgLoading])
 
     useEffect(() => {
         if (creating) {
@@ -127,16 +160,24 @@ function User(props: userProps) {
     }, [updating])
 
     useEffect(() => {
+        if (deleting) {
+            setStatus(Status.Loading);
+        }
+    }, [deleting])
+
+    useEffect(() => {
         if (data) {
             setStatus(Status.Success)
             const user = data;
             setUsername(user.username || "");
-            setOrganization(user.org ? user.org.id : 0);
+            setOrganization(user.org ? user.org.id : 1);
         }
     }, [data])
 
     useEffect(() => {
-        setOrgs(orgResponse);
+        if (orgResponse) {
+            setOrgs(orgResponse);
+        }
     }, [orgResponse])
 
     useEffect(() => {
@@ -145,9 +186,16 @@ function User(props: userProps) {
         }
     }, [getError])
 
+    useEffect(() => {
+        if (orgError) {
+            setErrorMsg(orgError.toString())
+        }
+    }, [orgError])
+
     return (
         <div className={`User status-${statusToString(status)}`}>
             <h3>{props.userId ? "Modify" : "New"} user</h3>
+            <Link to="/users/">Back</Link>
             <form onSubmit={(e) => {
                 e.preventDefault();
                 handleUpdateUser();
@@ -167,7 +215,7 @@ function User(props: userProps) {
                     <select name="organization" id="organization"
                         value={organization}
                         onChange={(e) => {
-                            setOrganization(e.target.value);
+                            setOrganization(parseInt(e.target.value));
                             setModified(true);
                         }}
                     >
@@ -178,6 +226,12 @@ function User(props: userProps) {
                 </div>
                 <div className="row">
                     <input type="submit" disabled={!modified} value="Tallenna" />
+                    <input type="button" value="Poista käyttäjä"
+                        onClick={(e) => {
+                            e.preventDefault();
+                            removeUser();
+                        }}
+                    />
                 </div>
             </form>
             <div className="error">

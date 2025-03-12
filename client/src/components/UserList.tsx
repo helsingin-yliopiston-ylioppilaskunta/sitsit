@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import api from './../api';
 
+import { Link } from "react-router";
+
 import './UserList.css'
 
 import { components } from './../schema';
@@ -15,13 +17,13 @@ function statusToString(status: Status) {
     let str = ""
     switch (status) {
         case Status.Loading:
-            str = "Loading";
+            str = "loading";
             break;
         case Status.Success:
-            str = "Ok"
+            str = "ok"
             break;
         case Status.Error:
-            str = "Error"
+            str = "error"
             break;
     }
 
@@ -38,7 +40,7 @@ function UserRow(props: userRowProps) {
             <li>{props.data.id}</li>
             <li>{props.data.username}</li>
             <li>{props.data.org ? props.data.org.name : "unset"}</li>
-            <li><a href={`/users/${props.data.id}`}>view / edit</a></li>
+            <li><Link to={`/users/${props.data.id}`}>edit</Link></li>
         </ul >
     )
 }
@@ -64,7 +66,6 @@ function UserList() {
         if (data) {
             setStatus(Status.Success)
             setUsers(data);
-            console.log(data);
         }
     }, [data])
 
@@ -75,12 +76,8 @@ function UserList() {
     }, [getError])
 
     return (
-        <div className="UserList">
+        <div className={`UserList status-${statusToString(status)}`}>
             <h3>Users</h3>
-            <div>
-                <p>Status: {statusToString(status)}</p>
-                <p>Error: {errorMsg}</p>
-            </div>
             <div className="List">
                 <ul className="Row header">
                     <li>#</li>
@@ -91,7 +88,10 @@ function UserList() {
                 {users.sort((a, b) => a.id - b.id).map((user) => (<UserRow data={user} />))}
             </div>
             <div>
-                <a href="/users/">Create new user</a>
+                <Link className="button" to="/users/new">Create new user</Link>
+            </div>
+            <div className="error">
+                {errorMsg}
             </div>
         </div>
     )

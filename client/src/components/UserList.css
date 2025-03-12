@@ -7,7 +7,7 @@
     border-radius: var(--radius);
 
     display: grid;
-    gap: var(--gap);
+    gap: var(--gap-l);
 }
 
 /* Move these to idex.css */
@@ -27,4 +27,19 @@
 
 .UserList .List {
     grid-template-columns: repeat(4, auto);
+}
+
+.button {
+    box-sizing: border-box;
+    display: inline-block;
+
+    background-color: var(--color-brown);
+    color: var(--color-fg);
+
+    border: var(--border);
+    border-radius: var(--radius);
+
+    padding: var(--gap-s) var(--gap) var(--gap-s) var(--gap);
+
+    text-decoration: none;
 }
