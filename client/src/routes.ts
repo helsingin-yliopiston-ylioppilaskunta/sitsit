@@ -12,5 +12,11 @@ export default [
         route("new", "./pages/new_user.tsx"),
     ]),
 
+    ...prefix("orgs", [
+        index("./pages/orglist.tsx"),
+        route(":orgId?", "./pages/org.tsx"),
+        route("new", "./pages/new_org.tsx"),
+    ]),
+
     route("*?", "catchall.tsx"),
 ] satisfies RouteConfig;

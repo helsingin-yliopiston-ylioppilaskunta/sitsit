@@ -1,0 +1,45 @@
+.OrgList {
+    background-color: var(--color-blood-red);
+
+    padding: var(--gap);
+
+    border: var(--border);
+    border-radius: var(--radius);
+
+    display: grid;
+    gap: var(--gap-l);
+}
+
+/* Move these to idex.css */
+.List {
+    display: grid;
+}
+
+.Row {
+    display: contents;
+    list-style-type: none;
+}
+
+.Row.header {
+    font-weight: bold;
+}
+
+
+.OrgList .List {
+    grid-template-columns: repeat(2, auto);
+}
+
+.button {
+    box-sizing: border-box;
+    display: inline-block;
+
+    background-color: var(--color-brown);
+    color: var(--color-fg);
+
+    border: var(--border);
+    border-radius: var(--radius);
+
+    padding: var(--gap-s) var(--gap) var(--gap-s) var(--gap);
+
+    text-decoration: none;
+}
