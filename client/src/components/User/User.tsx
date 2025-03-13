@@ -24,13 +24,13 @@ function User(props: UserProps) {
 
     const navigate = useNavigate();
 
-    const { data, error: getError, isLoading } = api.useQuery(
-        "get", "/users/{user_id}", {
-        params: {
-            path: { user_id: props.userId || -1 }
-        },
-        enabled: !!props.userId
-    });
+    const { data, error: getError, isLoading } = props.userId ?
+        api.useQuery(
+            "get", "/users/{user_id}", {
+            params: {
+                path: { user_id: props.userId }
+            }
+        }) : { data: undefined, error: undefined, isLoading: false };
 
     const { data: orgResponse, error: orgError, isLoading: orgLoading } = api.useQuery(
         "get", "/orgs/"
