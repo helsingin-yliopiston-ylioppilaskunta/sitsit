@@ -1,0 +1,23 @@
+.Group {
+    background-color: var(--color-blood-red);
+
+    padding: var(--gap);
+
+    border: var(--border);
+    border-radius: var(--radius);
+
+    display: grid;
+    gap: var(--gap);
+}
+
+.Group form {
+    display: grid;
+    grid-template-columns: auto;
+
+    gap: var(--gap-l);
+}
+
+.row label,
+.row input {
+    display: block;
+}
