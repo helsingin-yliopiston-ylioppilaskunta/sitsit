@@ -456,6 +456,14 @@ export interface components {
             /** Collection Id */
             collection_id: number;
         };
+        /** PublicGroupWithCollection */
+        PublicGroupWithCollection: {
+            /** Name */
+            name?: string;
+            /** Id */
+            id: number;
+            collection: components["schemas"]["PublicCollection"];
+        };
         /** PublicGroupWithCollectionAndResources */
         PublicGroupWithCollectionAndResources: {
             /** Name */
@@ -766,7 +774,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicUserWithOrg"];
+                    "application/json": components["schemas"]["PublicUserWithOrg"] | null;
                 };
             };
             /** @description Validation Error */
@@ -1188,7 +1196,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicGroupWithCollectionAndResources"];
+                    "application/json": components["schemas"]["PublicGroupWithCollection"][];
                 };
             };
             /** @description Validation Error */

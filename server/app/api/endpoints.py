@@ -357,18 +357,18 @@ async def update_collection(
 groups_router = APIRouter(prefix="/groups", tags=["Groups"])
 
 
-@groups_router.get("/", response_model=PublicGroupWithCollectionAndResources)
+@groups_router.get("/", response_model=list[PublicGroupWithCollection])
 async def read_groups(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> PublicGroupWithCollectionAndResources:
+) -> list[PublicGroupWithCollection]:
     query = (
         select(DBGroup)
         .where(DBGroup.active)
         .options(
             selectinload(DBGroup.collection),
-            selectinload(DBGroup.resources).selectinload(DBResource.resource_type),
+            # selectinload(DBGroup.resources).selectinload(DBResource.resource_type),
         )
     )
     query = query.offset(offset).limit(limit + 1)
