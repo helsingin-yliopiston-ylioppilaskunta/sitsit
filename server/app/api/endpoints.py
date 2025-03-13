@@ -455,25 +455,24 @@ resources_router = APIRouter(prefix="/resources", tags=["Resources"])
 @resources_router.get("/", response_model=list[PublicResourceWithGroupAndResourceType])
 async def read_resources(
     session: SessionDep,
-    offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100,
 ) -> list[PublicResourceWithGroupAndResourceType]:
     query = (
         select(DBResource)
         .where(DBResource.active)
         .options(selectinload(DBResource.group), selectinload(DBResource.resource_type))
     )
-    query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
     resources: list[PublicResourceWithGroupAndResourceType] = result.scalars().all()
-
-    print(resources)
 
     return resources
 
 
-@resources_router.get("/{resource_id}", response_model=PublicResource)
-async def get_one_resource(session: SessionDep, resource_id: int) -> PublicResource:
+@resources_router.get(
+    "/{resource_id}", response_model=PublicResourceWithGroupAndResourceType
+)
+async def get_one_resource(
+    session: SessionDep, resource_id: int
+) -> PublicResourceWithGroupAndResourceType:
     query = (
         select(DBResource)
         .where(DBResource.id == resource_id)
@@ -481,7 +480,7 @@ async def get_one_resource(session: SessionDep, resource_id: int) -> PublicResou
         .options(selectinload(DBResource.group), selectinload(DBResource.resource_type))
     )
     result = await session.execute(query)
-    resource: PublicResource = result.scalars().one()
+    resource: PublicResourceWithGroupAndResourceType = result.scalars().one()
 
     return resource
 

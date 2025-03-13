@@ -204,10 +204,6 @@ class PublicResourceTypeWithResources(BaseResourceType):
     resources: list["DBResource"]
 
 
-class ResourceTypeResponse(BaseResponse):
-    resourceTypes: list[PublicResourceType]
-
-
 ## Resources ##
 
 
@@ -253,13 +249,13 @@ class PublicResourceWithResourceType(BaseResource):
     resource_type: PublicResourceType
 
 
-class PublicResourceWithGroupAndResourceType(BaseResponse):
+class PublicResourceWithGroupAndResourceType(BaseResource):
     id: int
     group: PublicGroup
     resource_type: PublicResourceType
 
 
-class ResourceResponse(BaseResponse):
+class ResourceResponse(BaseResource):
     resources: list[PublicResource]
 
 
