@@ -551,10 +551,8 @@ export interface components {
         };
         /** PublicResourceWithGroupAndResourceType */
         PublicResourceWithGroupAndResourceType: {
-            /** Status */
-            status: boolean;
-            /** More Available */
-            more_available: boolean;
+            /** Name */
+            name?: string;
             /** Id */
             id: number;
             group: components["schemas"]["PublicGroup"];
@@ -1342,10 +1340,7 @@ export interface operations {
     };
     read_resources_resources__get: {
         parameters: {
-            query?: {
-                offset?: number;
-                limit?: number;
-            };
+            query?: never;
             header?: never;
             path?: never;
             cookie?: never;
@@ -1359,15 +1354,6 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["PublicResourceWithGroupAndResourceType"][];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

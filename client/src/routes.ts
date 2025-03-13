@@ -30,5 +30,12 @@ export default [
         route("new", "./pages/groups/new.tsx"),
     ]),
 
+    ...prefix("resources", [
+        index("./pages/resources/list.tsx"),
+        route(":resourceId?", "./pages/resources/view.tsx"),
+        route("new", "./pages/resources/new.tsx"),
+    ]),
+
+
     route("*?", "catchall.tsx"),
 ] satisfies RouteConfig;
