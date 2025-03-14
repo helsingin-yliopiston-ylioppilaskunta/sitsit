@@ -36,6 +36,19 @@ export default [
         route("new", "./pages/resources/new.tsx"),
     ]),
 
+    ...prefix("resourcetypes", [
+        index("./pages/resourcetypes/list.tsx"),
+        route(":resourcetypeId?", "./pages/resourcetypes/view.tsx"),
+        route("new", "./pages/resourcetypes/new.tsx"),
+    ]),
+
+    ...prefix("reservations", [
+        index("./pages/reservations/list.tsx"),
+        route(":reservationId?", "./pages/reservations/view.tsx"),
+        route("new", "./pages/reservations/new.tsx"),
+    ]),
+
+
 
     route("*?", "catchall.tsx"),
 ] satisfies RouteConfig;

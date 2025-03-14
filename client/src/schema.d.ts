@@ -426,6 +426,22 @@ export interface components {
             /** Org Id */
             org_id: number;
         };
+        /** DBResource */
+        DBResource: {
+            /** Name */
+            name?: string;
+            /** Id */
+            id?: number | null;
+            /** Group Id */
+            group_id?: number | null;
+            /** Resource Type Id */
+            resource_type_id?: number | null;
+            /**
+             * Active
+             * @default true
+             */
+            active: boolean;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -519,6 +535,14 @@ export interface components {
             /** Resource Id */
             resource_id: number;
         };
+        /** PublicReservationResourceWithResource */
+        PublicReservationResourceWithResource: {
+            /** Reservation Id */
+            reservation_id?: number;
+            /** Id */
+            id: number;
+            resource: components["schemas"]["DBResource"];
+        };
         /** PublicReservationTime */
         PublicReservationTime: {
             /** Reservation Id */
@@ -530,6 +554,22 @@ export interface components {
              * Format: date-time
              */
             timestamp: string;
+        };
+        /** PublicReservationWithUserAndTimesAndResources */
+        PublicReservationWithUserAndTimesAndResources: {
+            /** Name */
+            name: string;
+            /** Id */
+            id: number;
+            user: components["schemas"]["PublicUserWithOrg"];
+            /** Times */
+            times: components["schemas"]["PublicReservationTime"][];
+            /** Resources */
+            resources: components["schemas"]["PublicReservationResourceWithResource"][];
+            /** Contact Info */
+            contact_info: string | null;
+            /** Description */
+            description: string | null;
         };
         /** PublicResource */
         PublicResource: {
@@ -1408,7 +1448,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicResource"];
+                    "application/json": components["schemas"]["PublicResourceWithGroupAndResourceType"];
                 };
             };
             /** @description Validation Error */
@@ -1668,7 +1708,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicReservation"][];
+                    "application/json": components["schemas"]["PublicReservationWithUserAndTimesAndResources"][];
                 };
             };
             /** @description Validation Error */
@@ -1732,7 +1772,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["PublicReservation"];
+                    "application/json": components["schemas"]["PublicReservationWithUserAndTimesAndResources"];
                 };
             };
             /** @description Validation Error */
