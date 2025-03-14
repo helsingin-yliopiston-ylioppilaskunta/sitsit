@@ -626,31 +626,54 @@ async def update_resourceType(
 reservations_router = APIRouter(prefix="/reservations", tags=["Reservations"])
 
 
-@reservations_router.get("/", response_model=list[PublicReservation])
+@reservations_router.get(
+    "/", response_model=list[PublicReservationWithUserAndTimesAndResources]
+)
 async def read_reservations(
     session: SessionDep,
     offset: int = 0,
     limit: Annotated[int, Query(le=100)] = 100,
-) -> list[PublicReservation]:
-    query = select(DBReservation).where(DBReservation.active)
+) -> list[PublicReservationWithUserAndTimesAndResources]:
+    query = (
+        select(DBReservation)
+        .where(DBReservation.active)
+        .options(
+            selectinload(DBReservation.user).selectinload(DBUser.org),
+            selectinload(DBReservation.times),
+            selectinload(DBReservation.resources).selectinload(
+                DBReservationResource.resource
+            ),
+        )
+    )
     query = query.offset(offset).limit(limit + 1)
     result = await session.execute(query)
-    reservations: list[PublicReservation] = result.scalars().all()
+    reservations: list[PublicReservationWithUserAndTimesAndResources] = (
+        result.scalars().all()
+    )
 
     return reservations
 
 
-@reservations_router.get("/{reservation_id}", response_model=PublicReservation)
+@reservations_router.get(
+    "/{reservation_id}", response_model=PublicReservationWithUserAndTimesAndResources
+)
 async def get_one_reservation(
     session: SessionDep, reservation_id: int
-) -> PublicReservation:
+) -> PublicReservationWithUserAndTimesAndResources:
     query = (
         select(DBReservation)
         .where(DBReservation.id == reservation_id)
         .where(DBReservation.active)
+        .options(
+            selectinload(DBReservation.user).selectinload(DBUser.org),
+            selectinload(DBReservation.times),
+            selectinload(DBReservation.resources).selectinload(
+                DBReservationResource.resource
+            ),
+        )
     )
     result = await session.execute(query)
-    reservation: PublicReservation = result.scalars().one()
+    reservation: PublicReservationWithUserAndTimesAndResources = result.scalars().one()
 
     return reservation
 

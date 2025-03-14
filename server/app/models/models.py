@@ -219,6 +219,9 @@ class DBResource(BaseResource, table=True):
         default=None, foreign_key="dbresourcetype.id"
     )
     resource_type: DBResourceType = Relationship(back_populates="resources")
+    reservation_resources: list["DBReservationResource"] = Relationship(
+        back_populates="resource"
+    )
     active: bool = Field(default=True)
 
 
@@ -314,10 +317,11 @@ class PublicReservationWithTimesAndResources(BaseReservation):
 
 
 class PublicReservationWithUserAndTimesAndResources(BaseReservation):
+    name: str
     id: int
     user: PublicUserWithOrg
     times: list["PublicReservationTime"]
-    resources: list["PublicReservationResource"]
+    resources: list["PublicReservationResourceWithResource"]
     contact_info: Optional[str]
     description: Optional[str]
 
@@ -427,6 +431,7 @@ class BaseReservationResource(SQLModel):
 class DBReservationResource(BaseReservationResource, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     resource_id: int = Field(default=None, index=True, foreign_key="dbresource.id")
+    resource: DBResource = Relationship(back_populates="reservation_resources")
     reservation: DBReservation = Relationship(back_populates="resources")
     active: bool = Field(default=True)
 
@@ -442,6 +447,11 @@ class UpdateReservationResource(BaseReservationResource):
 class PublicReservationResource(BaseReservationResource):
     id: int
     resource_id: int
+
+
+class PublicReservationResourceWithResource(BaseReservationResource):
+    id: int
+    resource: DBResource
 
 
 class ReservationResourceResponse(BaseResponse):
