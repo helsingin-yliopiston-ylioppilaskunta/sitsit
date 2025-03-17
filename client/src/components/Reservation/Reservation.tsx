@@ -7,6 +7,7 @@ import { components } from '../../schema';
 
 import { Link, useNavigate } from "react-router";
 import Status from "../../status";
+import DateTime from "../DateTime/DateTime";
 
 interface ReservationProps {
     reservationId?: number;
@@ -147,15 +148,6 @@ function Reservation(props: ReservationProps) {
         }
     }, [userResponse]);
 
-    const timestampOptions = {
-        year: "numeric",
-        month: "numeric",
-        day: "numeric",
-        hour: "numeric",
-        minute: "numeric",
-        second: "numeric"
-    };
-
     return (
         <div className={`Reservation status-${status}`}>
             <h3>{props.reservationId ? "Muokkaa varausta" : "Uusi varaus"}</h3>
@@ -205,13 +197,12 @@ function Reservation(props: ReservationProps) {
                 <div className="row">
                     Times:
                     <ul>
-                        {times.map(time => {
-                            const date = new Date(time.timestamp);
-                            const datestring = new Intl.DateTimeFormat("fi", timestampOptions).format(date);
+                        {times.map((time) => {
                             return (
-                                <li>{datestring}</li>
-                            );
-                        })}
+                                <li><DateTime value={time.timestamp} /></li>
+                            )
+                        })
+                        }
                     </ul>
                 </div>
                 <div className="row">
