@@ -27,6 +27,11 @@ function Reservation(props: ReservationProps) {
     const [user, setUser] = useState<number>(1);
     const [users, setUsers] = useState<components["schemas"]["PublicUserWithOrg"][]>([]);
 
+    type updatedTimesType = { [id: number]: components["schemas"]["PublicReservationTime"] }
+    const [updatedTimes, setUpdatedTimes] = useState<updatedTimesType>(
+        {} as updatedTimesType
+    );
+
     const navigate = useNavigate();
 
     const { data, error: getError, isLoading } = props.reservationId ?
@@ -91,6 +96,21 @@ function Reservation(props: ReservationProps) {
         }
         );
 
+    const { mutate: updateTime, isUpdatingTime } =
+        api.useMutation(
+            "patch", "/reservationTimes/{reservationTime_id}", {
+            onSuccess: () => {
+                setModified(false);
+                setStatus(Status.Success);
+                navigate("/reservations");
+            },
+            onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
+                setStatus(Status.Error);
+                setErrorMsg(JSON.stringify(error));
+            }
+        }
+        );
+
     const handleUpdateReservation = () => {
         const reservation = {
             name: reservationname,
@@ -111,13 +131,57 @@ function Reservation(props: ReservationProps) {
                 body: reservation
             })
         }
+
+        Object.entries(updatedTimes).forEach(([id, time]) => {
+            const newTime = {
+                end: time.end,
+                start: time.start,
+                reservation_id: time.reservation_id
+            }
+
+            updateTime({
+                params: {
+                    path: { reservationTime_id: time.id }
+                },
+                body: newTime
+            })
+        })
     };
 
     const removeReservation = () => {
         deleteReservation({ params: { path: { reservation_id: props.reservationId || -1 } } })
     }
 
-    const isAnyLoading = isLoading || userLoading || creating || updating || deleting;
+
+    enum TimeType {
+        Start,
+        End
+    }
+
+    function handleUpdateTime(id: number, type: TimeType, newTime: string) {
+        console.log(newTime);
+        for (const time of times) {
+            if (time.id == id) {
+                const newTimes = { ...updatedTimes };
+                if (type == TimeType.Start) {
+                    if (id in newTimes) {
+                        newTimes[id] = { ...newTimes[id], start: newTime }
+                    } else {
+                        newTimes[id] = { ...time, start: newTime };
+                    }
+                } else if (type == TimeType.End) {
+                    if (id in newTimes) {
+                        newTimes[id] = { ...newTimes[id], end: newTime };
+                    } else {
+                        newTimes[id] = { ...time, end: newTime }
+                    }
+                }
+                setUpdatedTimes(newTimes)
+            }
+        }
+    }
+
+    const isAnyLoading = isLoading || userLoading || creating || updating || deleting || isUpdatingTime;
 
     const combinedError = getError || userError;
 
@@ -199,7 +263,11 @@ function Reservation(props: ReservationProps) {
                     <ul>
                         {times.map((time) => {
                             return (
-                                <li><DateTime value={time.timestamp} /></li>
+                                <li>
+                                    <DateTime value={time.start} onChange={(t: string) => handleUpdateTime(time.id, TimeType.Start, t)} />
+                                    <span> - </span>
+                                    <DateTime value={time.end} onChange={(t: string) => handleUpdateTime(time.id, TimeType.End, t)} />
+                                </li>
                             )
                         })
                         }

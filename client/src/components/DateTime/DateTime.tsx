@@ -41,6 +41,7 @@ function DateTime(props: DateTimeProps) {
         const newDate = new Date(newYear, newMonth - 1, newDay, newHour, newMinute);
 
         if (props.onChange) {
+            console.log(newYear, newMonth - 1, newDay, newHour, newMinute);
             props.onChange(newDate.getTime().toString());
         }
     }
@@ -58,7 +59,7 @@ function DateTime(props: DateTimeProps) {
         if (newMonth >= 1 && newMonth <= 12) {
             setMonth(newMonth);
         }
-        updateDate(newMonth, month, year, hour, minute);
+        updateDate(day, newMonth, year, hour, minute);
     }
 
     const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,23 +68,23 @@ function DateTime(props: DateTimeProps) {
         if (newYear >= 1 && newYear <= 3000) {
             setYear(newYear);
         }
-        updateDate(newYear, month, year, hour, minute);
+        updateDate(day, month, newYear, hour, minute);
     }
 
     const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newHour = Number(e.target.value);
-        if (newHour >= 1 && newHour <= 23) {
+        if (newHour >= 0 && newHour <= 23) {
             setHour(newHour);
         }
-        updateDate(newHour, month, year, hour, minute);
+        updateDate(day, month, year, newHour, minute);
     }
 
     const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newMinute = Number(e.target.value);
-        if (newMinute >= 1 && newMinute <= 59) {
+        if (newMinute >= 0 && newMinute <= 59) {
             setMinute(newMinute);
         }
-        updateDate(newMinute, month, year, hour, minute);
+        updateDate(day, month, year, hour, newMinute);
     }
 
     return (
