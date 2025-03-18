@@ -398,10 +398,15 @@ export interface components {
             /** Reservation Id */
             reservation_id?: number;
             /**
-             * Timestamp
+             * Start
              * Format: date-time
              */
-            timestamp: string;
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
         };
         /** CreateResource */
         CreateResource: {
@@ -550,10 +555,15 @@ export interface components {
             /** Id */
             id: number;
             /**
-             * Timestamp
+             * Start
              * Format: date-time
              */
-            timestamp: string;
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
         };
         /** PublicReservationWithUserAndTimesAndResources */
         PublicReservationWithUserAndTimesAndResources: {
@@ -663,10 +673,15 @@ export interface components {
             /** Reservation Id */
             reservation_id?: number;
             /**
-             * Timestamp
+             * Start
              * Format: date-time
              */
-            timestamp: string;
+            start: string;
+            /**
+             * End
+             * Format: date-time
+             */
+            end: string;
         };
         /** UpdateResource */
         UpdateResource: {

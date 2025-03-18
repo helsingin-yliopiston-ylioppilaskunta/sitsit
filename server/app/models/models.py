@@ -394,7 +394,11 @@ class BaseReservationTime(SQLModel):
 
 class DBReservationTime(BaseReservationTime, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
-    timestamp: datetime = Field(
+    start: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc),
+        sa_column=Column(DateTime(timezone=True), server_default=func.now()),
+    )
+    end: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc),
         sa_column=Column(DateTime(timezone=True), server_default=func.now()),
     )
@@ -403,16 +407,19 @@ class DBReservationTime(BaseReservationTime, table=True):
 
 
 class CreateReservationTime(BaseReservationTime):
-    timestamp: datetime
+    start: datetime
+    end: datetime
 
 
 class UpdateReservationTime(BaseReservationTime):
-    timestamp: datetime
+    start: datetime
+    end: datetime
 
 
 class PublicReservationTime(BaseReservationTime):
     id: int
-    timestamp: datetime
+    start: datetime
+    end: datetime
 
 
 class ReservationTimeResponse(BaseResponse):

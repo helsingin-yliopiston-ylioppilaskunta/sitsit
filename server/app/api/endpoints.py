@@ -777,7 +777,8 @@ async def create_reservationTime(
 ):
     db_reservationTime = DBReservationTime(
         reservation_id=reservationTime.reservation_id,
-        timestamp=reservationTime.timestamp,
+        start=reservationTime.start,
+        end=reservationTime.end,
     )
     session.add(db_reservationTime)
     await session.commit()
