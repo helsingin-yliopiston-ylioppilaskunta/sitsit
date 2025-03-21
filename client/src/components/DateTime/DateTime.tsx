@@ -16,8 +16,8 @@ function DateTime(props: DateTimeProps) {
 
     useEffect(() => {
         if (props.value) {
-            const date = new Date(parseInt(props.value));
-            console.log(date);
+            const date = new Date(props.value);
+            console.log(props.value, date);
             const formatter = new Intl.DateTimeFormat("default", {
                 day: "numeric",
                 month: "numeric",
@@ -44,7 +44,7 @@ function DateTime(props: DateTimeProps) {
     const updateDate = (newDay: number, newMonth: number, newYear: number, newHour: number, newMinute: number) => {
         const newDate = new Date(newYear, newMonth - 1, newDay, newHour, newMinute);
 
-        if (props.onChange) {
+        if (props.onDateUpdate) {
             console.log(newDate);
             props.onDateUpdate(newDate.getTime().toString());
         }
