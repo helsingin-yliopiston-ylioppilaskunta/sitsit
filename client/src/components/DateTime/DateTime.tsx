@@ -2,46 +2,49 @@ import { useState, useEffect } from 'react';
 import './DateTime.css'
 
 interface DateTimeProps {
-    value: string;
+    value: string | undefined;
     onChange?: (newTime: string) => void;
 }
 
 function DateTime(props: DateTimeProps) {
     const [day, setDay] = useState<number>(1);
     const [month, setMonth] = useState<number>(1);
-    const [year, setYear] = useState<number>(1970);
+    const [year, setYear] = useState<number>(2025);
     const [hour, setHour] = useState<number>(0);
     const [minute, setMinute] = useState<number>(0);
 
     useEffect(() => {
-        const date = new Date(props.value);
-        const formatter = new Intl.DateTimeFormat("default", {
-            day: "numeric",
-            month: "numeric",
-            year: "numeric",
-            hour: "numeric",
-            minute: "numeric",
-            hour12: false,
-        });
+        if (props.value) {
+            const date = new Date(parseInt(props.value));
+            console.log(date);
+            const formatter = new Intl.DateTimeFormat("default", {
+                day: "numeric",
+                month: "numeric",
+                year: "numeric",
+                hour: "numeric",
+                minute: "numeric",
+                hour12: false,
+            });
 
-        const parts = formatter.formatToParts(date);
-        const partMap: Record<string, string> = {};
-        parts.forEach(({ type, value }) => {
-            partMap[type] = value;
-        });
+            const parts = formatter.formatToParts(date);
+            const partMap: Record<string, string> = {};
+            parts.forEach(({ type, value }) => {
+                partMap[type] = value;
+            });
 
-        setDay(Number(partMap.day));
-        setMonth(Number(partMap.month));
-        setYear(Number(partMap.year));
-        setHour(Number(partMap.hour));
-        setMinute(Number(partMap.minute));
+            setDay(Number(partMap.day));
+            setMonth(Number(partMap.month));
+            setYear(Number(partMap.year));
+            setHour(Number(partMap.hour));
+            setMinute(Number(partMap.minute));
+        }
     }, [props.value]);
 
     const updateDate = (newDay: number, newMonth: number, newYear: number, newHour: number, newMinute: number) => {
         const newDate = new Date(newYear, newMonth - 1, newDay, newHour, newMinute);
 
         if (props.onChange) {
-            console.log(newYear, newMonth - 1, newDay, newHour, newMinute);
+            console.log(newDate);
             props.onChange(newDate.getTime().toString());
         }
     }

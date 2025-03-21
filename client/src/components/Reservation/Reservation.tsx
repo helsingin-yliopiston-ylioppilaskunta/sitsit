@@ -24,6 +24,9 @@ function Reservation(props: ReservationProps) {
 
     const [times, setTimes] = useState<components["schemas"]["PublicReservationTime"][]>([]);
 
+    const [newTimes, setNewTimes] =
+        useState<{ start: string | undefined, end: string | undefined }[]>([]);
+
     const [user, setUser] = useState<number>(1);
     const [users, setUsers] = useState<components["schemas"]["PublicUserWithOrg"][]>([]);
 
@@ -96,7 +99,7 @@ function Reservation(props: ReservationProps) {
         }
         );
 
-    const { mutate: updateTime, isUpdatingTime } =
+    const { mutate: updateTime, isPending: isUpdatingTime } =
         api.useMutation(
             "patch", "/reservationTimes/{reservationTime_id}", {
             onSuccess: () => {
@@ -132,7 +135,7 @@ function Reservation(props: ReservationProps) {
             })
         }
 
-        Object.entries(updatedTimes).forEach(([id, time]) => {
+        Object.entries(updatedTimes).forEach(([, time]) => {
             const newTime = {
                 end: time.end,
                 start: time.start,
@@ -159,7 +162,6 @@ function Reservation(props: ReservationProps) {
     }
 
     function handleUpdateTime(id: number, type: TimeType, newTime: string) {
-        console.log(newTime);
         for (const time of times) {
             if (time.id == id) {
                 const newTimes = { ...updatedTimes };
@@ -179,6 +181,26 @@ function Reservation(props: ReservationProps) {
                 setUpdatedTimes(newTimes)
             }
         }
+    }
+
+    function handleUpdateNewTime(id: number, type: TimeType, newTime: string) {
+        setNewTimes(newTimes.map((time, i) => {
+            if (id === i) {
+                if (type == TimeType.Start) {
+                    const a = { ...time, start: newTime }
+                    console.log(time, a)
+                    return a;
+                } else {
+                    return { ...time, end: newTime }
+                }
+            } else {
+                return time
+            }
+        }))
+    }
+
+    function addNewTime() {
+        setNewTimes([...newTimes, { start: Date.now(), end: Date.now() }])
     }
 
     const isAnyLoading = isLoading || userLoading || creating || updating || deleting || isUpdatingTime;
@@ -272,6 +294,23 @@ function Reservation(props: ReservationProps) {
                         })
                         }
                     </ul>
+                    <ul>
+                        {
+                            newTimes.map((newTime, id) => (
+                                <li>
+                                    <DateTime key={id}
+                                        value={newTime.start || ""}
+                                        onChange={(t: string) => handleUpdateNewTime(id, TimeType.Start, t)}
+                                    />
+                                </li>
+                            ))
+                        }
+                    </ul>
+                    <input type="button" value="Lisää aika"
+                        onClick={() => {
+                            addNewTime();
+                        }}
+                    />
                 </div>
                 <div className="row">
                     <input type="submit" disabled={!modified} value="Tallenna" />
