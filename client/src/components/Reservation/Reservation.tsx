@@ -300,7 +300,8 @@ function Reservation(props: ReservationProps) {
                                 <li>
                                     <DateTime key={id}
                                         value={newTime.start || ""}
-                                        onChange={(t: string) => handleUpdateNewTime(id, TimeType.Start, t)}
+                                        onDateUpdate={(t: string) => handleUpdateNewTime(id, TimeType.Start, t)}
+                                        onInputChange={() => setModified(true)}
                                     />
                                 </li>
                             ))
