@@ -9,6 +9,9 @@ import { Link, useNavigate } from "react-router";
 import Status from "../../status";
 import DateTime from "../DateTime/DateTime";
 
+import DTPicker from '../DateTime/DTPicker';
+
+
 interface ReservationProps {
     reservationId?: number;
 }
@@ -25,7 +28,7 @@ function Reservation(props: ReservationProps) {
     const [times, setTimes] = useState<components["schemas"]["PublicReservationTime"][]>([]);
 
     const [newTimes, setNewTimes] =
-        useState<{ start: string | undefined, end: string | undefined }[]>([]);
+        useState<{ start: Date, end: Date }[]>([]);
 
     const [user, setUser] = useState<number>(1);
     const [users, setUsers] = useState<components["schemas"]["PublicUserWithOrg"][]>([]);
@@ -183,12 +186,12 @@ function Reservation(props: ReservationProps) {
         }
     }
 
-    function handleUpdateNewTime(id: number, type: TimeType, newTime: string) {
+    function handleUpdateNewTime(id: number, type: TimeType, newTime: Date) {
+        console.log("newTime: ", newTime);
         setNewTimes(newTimes.map((time, i) => {
             if (id === i) {
                 if (type == TimeType.Start) {
                     const a = { ...time, start: newTime }
-                    console.log(time, a)
                     return a;
                 } else {
                     return { ...time, end: newTime }
@@ -200,7 +203,13 @@ function Reservation(props: ReservationProps) {
     }
 
     function addNewTime() {
-        setNewTimes([...newTimes, { start: Date.now(), end: Date.now() }])
+        const start = new Date(Date.now());
+        start.setMinutes(0, 0, 0);
+
+        const end = new Date(Date.now());
+        end.setMinutes(59, 0, 0);
+
+        setNewTimes([...newTimes, { start: start, end: end }])
     }
 
     const isAnyLoading = isLoading || userLoading || creating || updating || deleting || isUpdatingTime;
@@ -237,6 +246,11 @@ function Reservation(props: ReservationProps) {
     return (
         <div className={`Reservation status-${status}`}>
             <h3>{props.reservationId ? "Muokkaa varausta" : "Uusi varaus"}</h3>
+            <input
+                type="datetime-local"
+                step="60"
+                value="2025-04-23T14:30"
+            />
             <Link to="/reservations/">Palaa</Link>
             <form onSubmit={(e) => {
                 e.preventDefault();
@@ -297,10 +311,18 @@ function Reservation(props: ReservationProps) {
                     <ul>
                         {
                             newTimes.map((newTime, id) => (
-                                <li>
-                                    <DateTime key={id}
-                                        value={newTime.start || ""}
-                                        onChange={(t: string) => handleUpdateNewTime(id, TimeType.Start, t)}
+                                <li key={id}>
+                                    <DTPicker
+                                        time={newTime.start}
+                                        onChange={(t: Date) => {
+                                            handleUpdateNewTime(id, TimeType.Start, t)
+                                        }}
+                                    />
+                                    <DTPicker
+                                        time={newTime.end}
+                                        onChange={(t: Date) => {
+                                            handleUpdateNewTime(id, TimeType.Start, t)
+                                        }}
                                     />
                                 </li>
                             ))

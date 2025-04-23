@@ -9,14 +9,14 @@ interface DateTimeProps {
 function DateTime(props: DateTimeProps) {
     const [day, setDay] = useState<number>(1);
     const [month, setMonth] = useState<number>(1);
-    const [year, setYear] = useState<number>(2025);
+    const [year, setYear] = useState<number>(0);
     const [hour, setHour] = useState<number>(0);
     const [minute, setMinute] = useState<number>(0);
 
     useEffect(() => {
         if (props.value) {
             const date = new Date(parseInt(props.value));
-            console.log(date);
+            console.log(date, props.value);
             const formatter = new Intl.DateTimeFormat("default", {
                 day: "numeric",
                 month: "numeric",
@@ -26,6 +26,7 @@ function DateTime(props: DateTimeProps) {
                 hour12: false,
             });
 
+            console.log(date);
             const parts = formatter.formatToParts(date);
             const partMap: Record<string, string> = {};
             parts.forEach(({ type, value }) => {
@@ -44,7 +45,6 @@ function DateTime(props: DateTimeProps) {
         const newDate = new Date(newYear, newMonth - 1, newDay, newHour, newMinute);
 
         if (props.onChange) {
-            console.log(newDate);
             props.onChange(newDate.getTime().toString());
         }
     }
@@ -66,6 +66,7 @@ function DateTime(props: DateTimeProps) {
     }
 
     const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        console.log("???", e.target.value);
         const newYear = Number(e.target.value);
         // I really hope no-one is using this after the year 3000
         if (newYear >= 1 && newYear <= 3000) {
