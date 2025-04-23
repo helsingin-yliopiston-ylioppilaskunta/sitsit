@@ -9,8 +9,9 @@ import { Link, useNavigate } from "react-router";
 import Status from "../../status";
 import DateTime from "../DateTime/DateTime";
 
-import DTPicker from '../DateTime/DTPicker';
-
+function dateToDateTimeLocal(d: Date): string {
+    return (new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString()).slice(0, -1);
+}
 
 interface ReservationProps {
     reservationId?: number;
@@ -244,7 +245,9 @@ function Reservation(props: ReservationProps) {
         start.setMinutes(0, 0, 0);
 
         const end = new Date(Date.now());
-        end.setMinutes(59, 0, 0);
+        end.setMinutes(60, 0, 0);
+
+        console.log(end);
 
         setNewTimes([...newTimes, { start: start, end: end }])
     }
@@ -283,11 +286,6 @@ function Reservation(props: ReservationProps) {
     return (
         <div className={`Reservation status-${status}`}>
             <h3>{props.reservationId ? "Muokkaa varausta" : "Uusi varaus"}</h3>
-            <input
-                type="datetime-local"
-                step="60"
-                value="2025-04-23T14:30"
-            />
             <Link to="/reservations/">Palaa</Link>
             <form onSubmit={(e) => {
                 e.preventDefault();
@@ -361,16 +359,19 @@ function Reservation(props: ReservationProps) {
                         {
                             newTimes.map((newTime, id) => (
                                 <li key={id}>
-                                    <DTPicker
-                                        time={newTime.start}
-                                        onChange={(t: Date) => {
-                                            handleUpdateNewTime(id, TimeType.Start, t)
+                                    <input type="datetime-local"
+                                        value={dateToDateTimeLocal(newTime.start)}
+                                        onChange={(e) => {
+                                            console.log(e.target.value);
+                                            handleUpdateNewTime(id, TimeType.Start, new Date(e.target.value))
                                         }}
                                     />
-                                    <DTPicker
-                                        time={newTime.end}
-                                        onChange={(t: Date) => {
-                                            handleUpdateNewTime(id, TimeType.Start, t)
+                                    <span> - </span>
+                                    <input type="datetime-local"
+                                        value={dateToDateTimeLocal(newTime.end)}
+                                        onChange={(e) => {
+                                            console.log(e.target.value);
+                                            handleUpdateNewTime(id, TimeType.End, new Date(e.target.value))
                                         }}
                                     />
                                 </li>
