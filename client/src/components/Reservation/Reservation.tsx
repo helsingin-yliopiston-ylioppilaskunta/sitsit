@@ -106,12 +106,28 @@ function Reservation(props: ReservationProps) {
         api.useMutation(
             "patch", "/reservationTimes/{reservationTime_id}", {
             onSuccess: () => {
+                console.log("Updating?")
                 setModified(false);
                 setStatus(Status.Success);
                 navigate("/reservations");
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error);
+                setErrorMsg(JSON.stringify(error));
+            }
+        }
+        );
+
+    const { mutate: createTime, isPending: isCreatingTime } =
+        api.useMutation(
+            "post", "/reservationTimes/", {
+            onSuccess: () => {
+                setModified(false);
+                setStatus(Status.Success);
+                // navigate("/reservations/");
+            },
+            onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
+                setStatus(Status.Error)
                 setErrorMsg(JSON.stringify(error));
             }
         }
@@ -138,12 +154,15 @@ function Reservation(props: ReservationProps) {
             })
         }
 
+        console.log("Updated times:", updatedTimes)
         Object.entries(updatedTimes).forEach(([, time]) => {
+            console.log(time)
             const newTime = {
                 end: time.end,
                 start: time.start,
                 reservation_id: time.reservation_id
             }
+
 
             updateTime({
                 params: {
@@ -152,6 +171,22 @@ function Reservation(props: ReservationProps) {
                 body: newTime
             })
         })
+
+        newTimes.forEach(time => {
+            const newTime = {
+                end: time.end,
+                start: time.start,
+                reservation_id: props.reservationId || -1 // To-do: this needs to be filled even if the props is not there
+                // probably we should update times only after reservation has
+                // been created?
+            }
+
+            createTime({
+                body: newTime
+            })
+        })
+
+        setNewTimes([]);
     };
 
     const removeReservation = () => {
@@ -165,7 +200,9 @@ function Reservation(props: ReservationProps) {
     }
 
     function handleUpdateTime(id: number, type: TimeType, newTime: string) {
+        console.log("Hei!", updatedTimes)
         for (const time of times) {
+            console.log(time)
             if (time.id == id) {
                 const newTimes = { ...updatedTimes };
                 if (type == TimeType.Start) {
@@ -212,7 +249,7 @@ function Reservation(props: ReservationProps) {
         setNewTimes([...newTimes, { start: start, end: end }])
     }
 
-    const isAnyLoading = isLoading || userLoading || creating || updating || deleting || isUpdatingTime;
+    const isAnyLoading = isLoading || userLoading || creating || updating || deleting || isUpdatingTime || isCreatingTime;
 
     const combinedError = getError || userError;
 
@@ -299,10 +336,22 @@ function Reservation(props: ReservationProps) {
                     <ul>
                         {times.map((time) => {
                             return (
-                                <li>
-                                    <DateTime value={time.start} onChange={(t: string) => handleUpdateTime(time.id, TimeType.Start, t)} />
+                                <li key={time.id}>
+                                    updateTime
+                                    <DateTime
+                                        value={time.start}
+                                        onDateUpdate={(t: string) => {
+                                            console.log("Testi?");
+                                            handleUpdateTime(time.id, TimeType.Start, t)
+                                        }}
+                                        onInputChange={() => setModified(true)}
+                                    />
                                     <span> - </span>
-                                    <DateTime value={time.end} onChange={(t: string) => handleUpdateTime(time.id, TimeType.End, t)} />
+                                    <DateTime
+                                        value={time.end}
+                                        onDateUpdate={(t: string) => handleUpdateTime(time.id, TimeType.End, t)}
+                                        onInputChange={() => setModified(true)}
+                                    />
                                 </li>
                             )
                         })

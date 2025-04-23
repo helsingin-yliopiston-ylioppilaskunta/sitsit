@@ -3,7 +3,8 @@ import './DateTime.css'
 
 interface DateTimeProps {
     value: string | undefined;
-    onChange?: (newTime: string) => void;
+    onDateUpdate?: (newTime: string) => void;
+    onChange?: () => void;
 }
 
 function DateTime(props: DateTimeProps) {
@@ -15,8 +16,8 @@ function DateTime(props: DateTimeProps) {
 
     useEffect(() => {
         if (props.value) {
-            const date = new Date(parseInt(props.value));
-            console.log(date, props.value);
+            const date = new Date(props.value);
+            console.log(props.value, date);
             const formatter = new Intl.DateTimeFormat("default", {
                 day: "numeric",
                 month: "numeric",
@@ -44,8 +45,35 @@ function DateTime(props: DateTimeProps) {
     const updateDate = (newDay: number, newMonth: number, newYear: number, newHour: number, newMinute: number) => {
         const newDate = new Date(newYear, newMonth - 1, newDay, newHour, newMinute);
 
-        if (props.onChange) {
-            props.onChange(newDate.getTime().toString());
+        if (props.onDateUpdate) {
+            console.log(newDate);
+            props.onDateUpdate(newDate.getTime().toString());
+        }
+    }
+
+    const notifyInputChange = () => {
+        if (props.onInputChange) {
+            props.onInputChange();
+        }
+    }
+
+    const handleBlur = () => {
+        updateDate(day, month, year, hour, minute);
+    }
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            updateDate(day, month, year, hour, minute);
+
+            const form = e.currentTarget.form;
+            if (form) {
+                if (typeof form.requestSubmit === "function") {
+                    form.requestSubmit();
+                } else {
+                    form.submit();
+                }
+            }
         }
     }
 
@@ -54,7 +82,7 @@ function DateTime(props: DateTimeProps) {
         if (newDay >= 1 && newDay <= 31) {
             setDay(newDay);
         }
-        updateDate(newDay, month, year, hour, minute);
+        notifyInputChange();
     }
 
     const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +90,7 @@ function DateTime(props: DateTimeProps) {
         if (newMonth >= 1 && newMonth <= 12) {
             setMonth(newMonth);
         }
-        updateDate(day, newMonth, year, hour, minute);
+        notifyInputChange();
     }
 
     const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -72,7 +100,7 @@ function DateTime(props: DateTimeProps) {
         if (newYear >= 1 && newYear <= 3000) {
             setYear(newYear);
         }
-        updateDate(day, month, newYear, hour, minute);
+        notifyInputChange();
     }
 
     const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,7 +108,7 @@ function DateTime(props: DateTimeProps) {
         if (newHour >= 0 && newHour <= 23) {
             setHour(newHour);
         }
-        updateDate(day, month, year, newHour, minute);
+        notifyInputChange();
     }
 
     const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -88,20 +116,20 @@ function DateTime(props: DateTimeProps) {
         if (newMinute >= 0 && newMinute <= 59) {
             setMinute(newMinute);
         }
-        updateDate(day, month, year, hour, newMinute);
+        notifyInputChange();
     }
 
     return (
         <div className="DateTime">
-            <input type="text" inputMode="numeric" className="day" value={day.toString().padStart(2, "0")} onChange={handleDayChange} placeholder="Day" />
+            <input type="text" inputMode="numeric" className="day" value={day.toString().padStart(2, "0")} onChange={handleDayChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="Day" />
             <span className="delimiter">.</span>
-            <input type="text" inputMode="numeric" className="month" value={month.toString().padStart(2, "0")} onChange={handleMonthChange} placeholder="Month" />
+            <input type="text" inputMode="numeric" className="month" value={month.toString().padStart(2, "0")} onChange={handleMonthChange} onKeyDown={handleKeyDown} onBlur={handleBlur}  placeholder="Month" />
             <span className="delimiter">.</span>
-            <input type="text" inputMode="numeric" className="year" value={year.toString().padStart(4, "0")} onChange={handleYearChange} placeholder="Year" />
+            <input type="text" inputMode="numeric" className="year" value={year.toString().padStart(4, "0")} onChange={handleYearChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="Year" />
             <span className="delimiter gap"></span>
-            <input type="text" inputMode="numeric" className="hour" value={hour.toString().padStart(2, "0")} onChange={handleHourChange} placeholder="Hour" />
+            <input type="text" inputMode="numeric" className="hour" value={hour.toString().padStart(2, "0")} onChange={handleHourChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="Hour" />
             <span className="delimiter">.</span>
-            <input type="text" inputMode="numeric" className="minute" value={minute.toString().padStart(2, "0")} onChange={handleMinuteChange} placeholder="Minute" />
+            <input type="text" inputMode="numeric" className="minute" value={minute.toString().padStart(2, "0")} onChange={handleMinuteChange} onKeyDown={handleKeyDown} onBlur={handleBlur} placeholder="Minute" />
         </div>
     )
 }
