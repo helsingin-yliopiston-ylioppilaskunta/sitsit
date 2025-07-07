@@ -76,10 +76,22 @@ function Reservation(props: ReservationProps) {
     const { mutate: createReservation, isPending: creating } =
         api.useMutation(
             "post", "/reservations/", {
-            onSuccess: () => {
+            onSuccess: (newReservation) => {
+                if (newStartTime && newEndTime) {
+                    createTime({
+                        body: {
+                            start: newStartTime,
+                            end: newEndTime,
+                            reservation_id: newReservation.id
+                        }
+                    });
+                }
+
+                setNewStartTime("");
+                setNewEndTime("");
                 setModified(false);
                 setStatus(Status.Success);
-                navigate("/reservations/");
+                navigate(`/reservations/${newReservation.id}`);
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
@@ -152,24 +164,37 @@ function Reservation(props: ReservationProps) {
                 },
                 body: reservation
             });
+
+            times.forEach((time) => {
+                const payload = {
+                    start: time.start,
+                    end: time.end,
+                    reservation_id: time.reservation_id,
+                };
+
+                updateTime({
+                    params: { path: { reservationTime_id: time.id } },
+                    body: payload,
+                });
+            });
+
+            if (newStartTime && newEndTime) {
+                createTime({
+                    body: {
+                        start: newStartTime,
+                        end: newEndTime,
+                        reservation_id: props.reservationId
+                    }
+                });
+            }
+
+            setNewStartTime("");
+            setNewEndTime("");
         } else {
             createReservation({
-                body: reservation
+                body: reservation,
             })
         }
-
-        times.forEach((time) => {
-            const payload = {
-                start: time.start,
-                end: time.end,
-                reservation_id: time.reservation_id,
-            };
-
-            updateTime({
-                params: { path: { reservationTime_id: time.id } },
-                body: payload,
-            })
-        })
     };
 
     const removeReservation = () => {
@@ -191,15 +216,6 @@ function Reservation(props: ReservationProps) {
             )
         );
         setModified(true);
-    }
-
-    function createNewTime() {
-        const payload = {
-            start: newStartTime,
-            end: newEndTime,
-            reservation_id: props.reservationId
-        }
-        createTime({ body: payload });
     }
 
     const isAnyLoading = isLoading || userLoading || creating || updating || deleting || isUpdatingTime || isCreatingTime;
@@ -230,6 +246,7 @@ function Reservation(props: ReservationProps) {
     useEffect(() => {
         if (userResponse) {
             setUsers(userResponse);
+            setUser(userResponse.map(r => r.id).sort()[0])
         }
     }, [userResponse]);
 
@@ -319,11 +336,6 @@ function Reservation(props: ReservationProps) {
                         value={newEndTime}
                         onChange={(e) => {
                             setNewEndTime(e.target.value)
-                        }}
-                    />
-                    <input type="button" value="Lisää aika"
-                        onClick={() => {
-                            createNewTime();
                         }}
                     />
                 </div>
