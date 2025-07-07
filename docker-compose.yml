@@ -1,14 +1,4 @@
 services:
-  api:
-    build: .
-    env_file: .env
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
-    volumes:
-      - .:/app # Live code reload
-
   db:
     image: postgres:17
     restart: always
@@ -21,6 +11,28 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./server
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./server:/app
+
+  client:
+    build:
+      context: ./client
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    working_dir: /app
+
 
 volumes:
   pgdata:
