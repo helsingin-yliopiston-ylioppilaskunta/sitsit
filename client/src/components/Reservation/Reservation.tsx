@@ -8,18 +8,34 @@ import { components } from '../../schema';
 import { Link, useNavigate } from "react-router";
 import Status from "../../status";
 
-function utcStringToDateTimeLocal(utcString: string): string {
-    const date = new Date(utcString);
+import { utcStringToDateTimeLocal } from '../../utils/date';
 
-    const pad = (n: number) => n.toString().padStart(2, "0");
+enum TimeType {
+    Start,
+    End
+}
 
-    const year = date.getFullYear();
-    const month = pad(date.getMonth() + 1);
-    const day = pad(date.getDate());
-    const hours = pad(date.getHours());
-    const minutes = pad(date.getMinutes());
+interface TimeRangeInputProps {
+    time: components["schemas"]["PublicReservationTime"];
+    onChange: (id: number, type: TimeType, newTime: string) => void;
+}
 
-    return `${year}-${month}-${day}T${hours}:${minutes}`;
+function TimeRangeInput({ time, onChange }: TimeRangeInputProps) {
+    return (
+        <li>
+            <input
+                type="datetime-local"
+                value={utcStringToDateTimeLocal(time.start)}
+                onChange={(e) => onChange(time.id, TimeType.Start, e.target.value)}
+            />
+            <span> - </span>
+            <input
+                type="datetime-local"
+                value={utcStringToDateTimeLocal(time.end)}
+                onChange={(e) => onChange(time.id, TimeType.End, e.target.value)}
+            />
+        </li>
+    )
 }
 
 interface ReservationProps {
@@ -299,27 +315,9 @@ function Reservation(props: ReservationProps) {
                 <div className="row">
                     Times:
                     <ul>
-                        {times.map((time) => {
-                            return (
-                                <li key={time.id}>
-                                    <input type="datetime-local"
-                                        value={utcStringToDateTimeLocal(time.start)}
-                                        onChange={(e) => {
-                                            console.log(e.target.value);
-                                            handleUpdateTime(time.id, TimeType.Start, e.target.value)
-                                        }}
-                                    />
-                                    <span> - </span>
-                                    <input type="datetime-local"
-                                        value={utcStringToDateTimeLocal(time.end)}
-                                        onChange={(e) => {
-                                            console.log(e.target.value);
-                                            handleUpdateTime(time.id, TimeType.End, e.target.value)
-                                        }}
-                                    />
-                                </li>
-                            )
-                        })
+                        {times.map((time) => (
+                            <TimeRangeInput key={time.id} time={time} onChange={handleUpdateTime} />
+                        ))
                         }
                     </ul>
                 </div>
