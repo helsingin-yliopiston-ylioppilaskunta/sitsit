@@ -7,10 +7,35 @@ import { components } from '../../schema';
 
 import { Link, useNavigate } from "react-router";
 import Status from "../../status";
-import DateTime from "../DateTime/DateTime";
 
-function dateToDateTimeLocal(d: Date): string {
-    return (new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString()).slice(0, -1);
+import { utcStringToDateTimeLocal } from '../../utils/date';
+
+enum TimeType {
+    Start,
+    End
+}
+
+interface TimeRangeInputProps {
+    time: components["schemas"]["PublicReservationTime"];
+    onChange: (id: number, type: TimeType, newTime: string) => void;
+}
+
+function TimeRangeInput({ time, onChange }: TimeRangeInputProps) {
+    return (
+        <li>
+            <input
+                type="datetime-local"
+                value={utcStringToDateTimeLocal(time.start)}
+                onChange={(e) => onChange(time.id, TimeType.Start, e.target.value)}
+            />
+            <span> - </span>
+            <input
+                type="datetime-local"
+                value={utcStringToDateTimeLocal(time.end)}
+                onChange={(e) => onChange(time.id, TimeType.End, e.target.value)}
+            />
+        </li>
+    )
 }
 
 interface ReservationProps {
@@ -27,17 +52,11 @@ function Reservation(props: ReservationProps) {
     const [description, setDescription] = useState("");
 
     const [times, setTimes] = useState<components["schemas"]["PublicReservationTime"][]>([]);
-
-    const [newTimes, setNewTimes] =
-        useState<{ start: Date, end: Date }[]>([]);
+    const [newStartTime, setNewStartTime] = useState<string>("");
+    const [newEndTime, setNewEndTime] = useState<string>("");
 
     const [user, setUser] = useState<number>(1);
     const [users, setUsers] = useState<components["schemas"]["PublicUserWithOrg"][]>([]);
-
-    type updatedTimesType = { [id: number]: components["schemas"]["PublicReservationTime"] }
-    const [updatedTimes, setUpdatedTimes] = useState<updatedTimesType>(
-        {} as updatedTimesType
-    );
 
     const navigate = useNavigate();
 
@@ -73,10 +92,22 @@ function Reservation(props: ReservationProps) {
     const { mutate: createReservation, isPending: creating } =
         api.useMutation(
             "post", "/reservations/", {
-            onSuccess: () => {
+            onSuccess: (newReservation) => {
+                if (newStartTime && newEndTime) {
+                    createTime({
+                        body: {
+                            start: newStartTime,
+                            end: newEndTime,
+                            reservation_id: newReservation.id
+                        }
+                    });
+                }
+
+                setNewStartTime("");
+                setNewEndTime("");
                 setModified(false);
                 setStatus(Status.Success);
-                navigate("/reservations/");
+                navigate(`/reservations/${newReservation.id}`);
             },
             onError: (error: { detail?: components["schemas"]["ValidationError"][] }) => {
                 setStatus(Status.Error)
@@ -149,45 +180,37 @@ function Reservation(props: ReservationProps) {
                 },
                 body: reservation
             });
+
+            times.forEach((time) => {
+                const payload = {
+                    start: time.start,
+                    end: time.end,
+                    reservation_id: time.reservation_id,
+                };
+
+                updateTime({
+                    params: { path: { reservationTime_id: time.id } },
+                    body: payload,
+                });
+            });
+
+            if (newStartTime && newEndTime) {
+                createTime({
+                    body: {
+                        start: newStartTime,
+                        end: newEndTime,
+                        reservation_id: props.reservationId
+                    }
+                });
+            }
+
+            setNewStartTime("");
+            setNewEndTime("");
         } else {
             createReservation({
-                body: reservation
+                body: reservation,
             })
         }
-
-        console.log("Updated times:", updatedTimes)
-        Object.entries(updatedTimes).forEach(([, time]) => {
-            console.log(time)
-            const newTime = {
-                end: time.end,
-                start: time.start,
-                reservation_id: time.reservation_id
-            }
-
-
-            updateTime({
-                params: {
-                    path: { reservationTime_id: time.id }
-                },
-                body: newTime
-            })
-        })
-
-        newTimes.forEach(time => {
-            const newTime = {
-                end: time.end,
-                start: time.start,
-                reservation_id: props.reservationId || -1 // To-do: this needs to be filled even if the props is not there
-                // probably we should update times only after reservation has
-                // been created?
-            }
-
-            createTime({
-                body: newTime
-            })
-        })
-
-        setNewTimes([]);
     };
 
     const removeReservation = () => {
@@ -201,55 +224,14 @@ function Reservation(props: ReservationProps) {
     }
 
     function handleUpdateTime(id: number, type: TimeType, newTime: string) {
-        console.log("Hei!", updatedTimes)
-        for (const time of times) {
-            console.log(time)
-            if (time.id == id) {
-                const newTimes = { ...updatedTimes };
-                if (type == TimeType.Start) {
-                    if (id in newTimes) {
-                        newTimes[id] = { ...newTimes[id], start: newTime }
-                    } else {
-                        newTimes[id] = { ...time, start: newTime };
-                    }
-                } else if (type == TimeType.End) {
-                    if (id in newTimes) {
-                        newTimes[id] = { ...newTimes[id], end: newTime };
-                    } else {
-                        newTimes[id] = { ...time, end: newTime }
-                    }
-                }
-                setUpdatedTimes(newTimes)
-            }
-        }
-    }
-
-    function handleUpdateNewTime(id: number, type: TimeType, newTime: Date) {
-        console.log("newTime: ", newTime);
-        setNewTimes(newTimes.map((time, i) => {
-            if (id === i) {
-                if (type == TimeType.Start) {
-                    const a = { ...time, start: newTime }
-                    return a;
-                } else {
-                    return { ...time, end: newTime }
-                }
-            } else {
-                return time
-            }
-        }))
-    }
-
-    function addNewTime() {
-        const start = new Date(Date.now());
-        start.setMinutes(0, 0, 0);
-
-        const end = new Date(Date.now());
-        end.setMinutes(60, 0, 0);
-
-        console.log(end);
-
-        setNewTimes([...newTimes, { start: start, end: end }])
+        setTimes(prev =>
+            prev.map(time =>
+                time.id === id
+                    ? { ...time, [type === TimeType.Start ? "start" : "end"]: newTime }
+                    : time
+            )
+        );
+        setModified(true);
     }
 
     const isAnyLoading = isLoading || userLoading || creating || updating || deleting || isUpdatingTime || isCreatingTime;
@@ -280,6 +262,7 @@ function Reservation(props: ReservationProps) {
     useEffect(() => {
         if (userResponse) {
             setUsers(userResponse);
+            setUser(userResponse.map(r => r.id).sort()[0])
         }
     }, [userResponse]);
 
@@ -332,55 +315,25 @@ function Reservation(props: ReservationProps) {
                 <div className="row">
                     Times:
                     <ul>
-                        {times.map((time) => {
-                            return (
-                                <li key={time.id}>
-                                    updateTime
-                                    <DateTime
-                                        value={time.start}
-                                        onDateUpdate={(t: string) => {
-                                            console.log("Testi?");
-                                            handleUpdateTime(time.id, TimeType.Start, t)
-                                        }}
-                                        onInputChange={() => setModified(true)}
-                                    />
-                                    <span> - </span>
-                                    <DateTime
-                                        value={time.end}
-                                        onDateUpdate={(t: string) => handleUpdateTime(time.id, TimeType.End, t)}
-                                        onInputChange={() => setModified(true)}
-                                    />
-                                </li>
-                            )
-                        })
+                        {times.map((time) => (
+                            <TimeRangeInput key={time.id} time={time} onChange={handleUpdateTime} />
+                        ))
                         }
                     </ul>
-                    <ul>
-                        {
-                            newTimes.map((newTime, id) => (
-                                <li key={id}>
-                                    <input type="datetime-local"
-                                        value={dateToDateTimeLocal(newTime.start)}
-                                        onChange={(e) => {
-                                            console.log(e.target.value);
-                                            handleUpdateNewTime(id, TimeType.Start, new Date(e.target.value))
-                                        }}
-                                    />
-                                    <span> - </span>
-                                    <input type="datetime-local"
-                                        value={dateToDateTimeLocal(newTime.end)}
-                                        onChange={(e) => {
-                                            console.log(e.target.value);
-                                            handleUpdateNewTime(id, TimeType.End, new Date(e.target.value))
-                                        }}
-                                    />
-                                </li>
-                            ))
-                        }
-                    </ul>
-                    <input type="button" value="Lisää aika"
-                        onClick={() => {
-                            addNewTime();
+                </div>
+                <div className="row">
+                    Lisää uusi aika:
+                    <input type="datetime-local"
+                        value={newStartTime}
+                        onChange={(e) => {
+                            setNewStartTime(e.target.value);
+                        }}
+                    />
+                    <span> - </span>
+                    <input type="datetime-local"
+                        value={newEndTime}
+                        onChange={(e) => {
+                            setNewEndTime(e.target.value)
                         }}
                     />
                 </div>
