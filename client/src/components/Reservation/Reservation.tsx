@@ -8,10 +8,6 @@ import { components } from '../../schema';
 import { Link, useNavigate } from "react-router";
 import Status from "../../status";
 
-function dateToDateTimeLocal(d: Date): string {
-    return (new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString()).slice(0, -1);
-}
-
 function utcStringToDateTimeLocal(utcString: string): string {
     const date = new Date(utcString);
 
@@ -45,11 +41,6 @@ function Reservation(props: ReservationProps) {
 
     const [user, setUser] = useState<number>(1);
     const [users, setUsers] = useState<components["schemas"]["PublicUserWithOrg"][]>([]);
-
-    type updatedTimesType = { [id: number]: components["schemas"]["PublicReservationTime"] }
-    const [updatedTimes, setUpdatedTimes] = useState<updatedTimesType>(
-        {} as updatedTimesType
-    );
 
     const navigate = useNavigate();
 
