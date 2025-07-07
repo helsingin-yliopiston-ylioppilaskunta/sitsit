@@ -1,4 +1,4 @@
-import ReservationList from '../../components/ReservationList/ReservationList';
+import ReservationList from '@components/ReservationList/ReservationList';
 
 export async function clientLoader() {
     return {

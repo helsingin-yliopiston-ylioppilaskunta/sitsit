@@ -8,7 +8,7 @@ import { components } from '../../schema';
 import { Link, useNavigate } from "react-router";
 import Status from "../../status";
 
-import { utcStringToDateTimeLocal } from '../../utils/date';
+import { utcStringToDateTimeLocal } from '@utils/date';
 
 enum TimeType {
     Start,

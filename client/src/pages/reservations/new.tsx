@@ -1,5 +1,5 @@
 import type { Route } from './+types/groups';
-import Reservation from '../../components/Reservation/Reservation';
+import Reservation from '@components/Reservation/Reservation';
 
 export async function clientLoader() {
     return {
