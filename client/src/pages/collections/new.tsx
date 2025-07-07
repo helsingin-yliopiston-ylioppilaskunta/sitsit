@@ -1,5 +1,5 @@
 import type { Route } from './+types/collections';
-import Collection from '../../components/Collection/Collection';
+import Collection from '@components/Collection/Collection';
 
 export async function clientLoader() {
     return {
